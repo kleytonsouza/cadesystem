@@ -9,7 +9,7 @@ import 'data/repositories/objeto_repository.dart';
 import 'data/services/cade_database.dart';
 import 'data/services/midia_service.dart';
 import 'data/services/permissao_service.dart';
-import 'ui/registrar/registrar_view.dart';
+import 'ui/home/home_view.dart';
 import 'ui/registrar/registrar_view_model.dart';
 
 /// Mantém as dependências pelo tempo de vida do aplicativo e as libera ao sair.
@@ -71,7 +71,7 @@ class _CadeAppState extends State<CadeApp> {
             border: OutlineInputBorder(),
           ),
         ),
-        home: const RegistrarView(),
+        home: const HomeView(),
       ),
     );
   }
