@@ -1,5 +1,4 @@
 import 'package:cadesystem/data/repositories/categoria_repository.dart';
-import 'package:cadesystem/data/repositories/local_repository.dart';
 import 'package:cadesystem/data/repositories/objeto_repository.dart';
 import 'package:cadesystem/data/services/cade_database.dart';
 import 'package:cadesystem/data/services/midia_service.dart';
@@ -19,13 +18,11 @@ class _MidiaDeTeste implements MidiaService {
 void main() {
   late CadeDatabase banco;
   late CategoriaRepository categorias;
-  late LocalRepository locais;
   late ObjetoRepository objetos;
 
   setUp(() {
     banco = CadeDatabase(NativeDatabase.memory());
     categorias = CategoriaRepository(banco: banco);
-    locais = LocalRepository(banco: banco, midia: _MidiaDeTeste());
     objetos = ObjetoRepository(
       banco: banco,
       midia: _MidiaDeTeste(),
