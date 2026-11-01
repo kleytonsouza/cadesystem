@@ -1,17 +1,16 @@
 import '../../data/repositories/objeto_repository.dart';
+import '../../domain/models/historico_local.dart';
 import '../../domain/models/objeto_detalhe.dart';
 import '../core/base_view_model.dart';
 
 class DetalheViewModel extends BaseViewModel {
-  DetalheViewModel({
-    required this.objetoId,
-    required this._objetos,
-  });
+  DetalheViewModel({required this.objetoId, required this._objetos});
 
   final int objetoId;
   final ObjetoRepository _objetos;
 
   ObjetoDetalhe? _detalhe;
+  List<HistoricoLocal> _historico = const [];
   bool _ocupado = false;
   bool _excluido = false;
 
@@ -20,6 +19,7 @@ class DetalheViewModel extends BaseViewModel {
   // ---------------------------------------------------------------
 
   ObjetoDetalhe? get detalhe => _detalhe;
+  List<HistoricoLocal> get historico => List.unmodifiable(_historico);
 
   /// Há uma operação em andamento (mover, excluir...): desabilite os botões.
   bool get ocupado => _ocupado;
@@ -44,14 +44,21 @@ class DetalheViewModel extends BaseViewModel {
       final encontrado = await _objetos.obter(objetoId);
       if (encontrado == null) {
         _detalhe = null;
-        definirEstado(EstadoTela.vazio, erro: 'Este objeto não foi encontrado.');
+        definirEstado(
+          EstadoTela.vazio,
+          erro: 'Este objeto não foi encontrado.',
+        );
         return;
       }
       _detalhe = encontrado;
+      _historico = await _objetos.historicoDoObjeto(objetoId);
       definirEstado(EstadoTela.sucesso);
     } catch (_) {
-      definirEstado(EstadoTela.erro,
-          erro: 'Não foi possível abrir o objeto. Tente novamente.');
+      _historico = const [];
+      definirEstado(
+        EstadoTela.erro,
+        erro: 'Não foi possível abrir o objeto. Tente novamente.',
+      );
     }
   }
 

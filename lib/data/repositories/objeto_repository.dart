@@ -1,6 +1,7 @@
 import '../../domain/models/categoria.dart';
+import '../../domain/models/historico_local.dart';
 import '../../domain/models/objeto_detalhe.dart';
-import '../services/cade_database.dart';
+import '../services/cade_database.dart' hide HistoricoLocal;
 import '../services/midia_service.dart';
 import 'categoria_repository.dart';
 import 'mappers.dart';
@@ -67,13 +68,16 @@ class ObjetoRepository {
 
     return linhas
         .where((l) => localId == null || l.objeto.localId == localId)
-        .where((l) =>
-            categoriaId == null || l.objeto.categoriaId == categoriaId)
-        .map((l) => ObjetoDetalhe(
-              objeto: l.objeto.paraModel(),
-              local: l.local.paraModel(),
-              categoria: categorias[l.objeto.categoriaId],
-            ))
+        .where(
+          (l) => categoriaId == null || l.objeto.categoriaId == categoriaId,
+        )
+        .map(
+          (l) => ObjetoDetalhe(
+            objeto: l.objeto.paraModel(),
+            local: l.local.paraModel(),
+            categoria: categorias[l.objeto.categoriaId],
+          ),
+        )
         .toList();
   }
 
@@ -106,6 +110,29 @@ class ObjetoRepository {
     return _banco.moverObjeto(objetoId, novoLocal);
   }
 
+  Future<List<HistoricoLocal>> historicoDoObjeto(int objetoId) async {
+    final registros = await _banco.historicoDoObjeto(objetoId);
+    if (registros.isEmpty) return const [];
+
+    final locais = {
+      for (final local in await _banco.listarLocais()) local.id: local,
+    };
+    return registros.map((registro) {
+      final localAntigo = registro.localAntigoId == null
+          ? '—'
+          : (locais[registro.localAntigoId]?.nome ?? 'Local removido');
+      final localNovo = locais[registro.localNovoId]?.nome ?? 'Local removido';
+
+      return HistoricoLocal(
+        id: registro.id,
+        objetoId: registro.objetoId,
+        localAntigo: localAntigo,
+        localNovo: localNovo,
+        alteradoEm: registro.alteradoEm,
+      );
+    }).toList();
+  }
+
   /// US10: exclui o objeto e apaga a foto e o áudio dele do aparelho.
   /// A foto do local NÃO é apagada, porque outros objetos podem usá-la.
   Future<void> excluir(int id) async {
@@ -127,11 +154,13 @@ class ObjetoRepository {
     for (final o in antigos) {
       final local = locais[o.localId];
       if (local == null) continue;
-      resultado.add(ObjetoDetalhe(
-        objeto: o.paraModel(),
-        local: local.paraModel(),
-        categoria: categorias[o.categoriaId],
-      ));
+      resultado.add(
+        ObjetoDetalhe(
+          objeto: o.paraModel(),
+          local: local.paraModel(),
+          categoria: categorias[o.categoriaId],
+        ),
+      );
     }
     return resultado;
   }
