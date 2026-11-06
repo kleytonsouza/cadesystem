@@ -61,6 +61,9 @@ class Objetos extends Table {
   /// US11: última vez que o usuário confirmou onde o objeto está.
   DateTimeColumn get confirmadoEm =>
       dateTime().withDefault(currentDateAndTime)();
+
+  /// Compatibilidade com bancos da versão 2; a exclusão atual é definitiva.
+  DateTimeColumn get excluidoEm => dateTime().nullable()();
 }
 
 /// US09: histórico de mudanças de local.
@@ -99,7 +102,7 @@ class CadeDatabase extends _$CadeDatabase {
     : super(executor ?? driftDatabase(name: 'cade'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -107,13 +110,11 @@ class CadeDatabase extends _$CadeDatabase {
       await m.createAll();
       await _semear();
     },
-    // Quando mudar o esquema: aumente schemaVersion, rode
-    //   dart run drift_dev make-migrations
-    // e descomente o bloco abaixo (o arquivo .steps.dart é gerado):
-    //
-    // onUpgrade: stepByStep(
-    //   from1To2: (m, schema) async { ... },
-    // ),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(objetos, objetos.excluidoEm);
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
@@ -181,7 +182,8 @@ class CadeDatabase extends _$CadeDatabase {
     final emUso =
         await (selectOnly(objetos)
               ..addColumns([contagem])
-              ..where(objetos.localId.equals(id)))
+              ..where(objetos.localId.equals(id))
+              ..where(objetos.excluidoEm.isNull()))
             .map((row) => row.read(contagem))
             .getSingle();
     if ((emUso ?? 0) > 0) return false;
@@ -231,6 +233,7 @@ class CadeDatabase extends _$CadeDatabase {
     final consulta =
         select(objetos)
             .join([innerJoin(locais, locais.id.equalsExp(objetos.localId))])
+          ..where(objetos.excluidoEm.isNull())
           ..where(objetos.nome.like('%${termo.trim()}%'))
           ..orderBy([OrderingTerm.desc(objetos.registradoEm)]);
 
@@ -242,9 +245,11 @@ class CadeDatabase extends _$CadeDatabase {
 
   /// US07: detalhe de um objeto (item e local).
   Future<ObjetoComLocal?> obterObjeto(int id) async {
-    final consulta = select(objetos).join([
-      innerJoin(locais, locais.id.equalsExp(objetos.localId)),
-    ])..where(objetos.id.equals(id));
+    final consulta =
+        select(objetos)
+            .join([innerJoin(locais, locais.id.equalsExp(objetos.localId))])
+          ..where(objetos.id.equals(id))
+          ..where(objetos.excluidoEm.isNull());
 
     final linha = await consulta.getSingleOrNull();
     if (linha == null) return null;
@@ -255,6 +260,7 @@ class CadeDatabase extends _$CadeDatabase {
   Future<List<ObjetoRow>> objetosDoLocal(int localId) {
     return (select(objetos)
           ..where((o) => o.localId.equals(localId))
+          ..where((o) => o.excluidoEm.isNull())
           ..orderBy([(o) => OrderingTerm.asc(o.nome)]))
         .get();
   }
@@ -299,15 +305,67 @@ class CadeDatabase extends _$CadeDatabase {
         .get();
   }
 
-  /// US10: exclui o objeto e devolve a linha apagada, para o repository
-  /// poder remover os arquivos de foto e áudio do aparelho.
+  /// Exclui o registro e o histórico; devolve as mídias para limpeza no repository.
   Future<ObjetoRow?> excluirObjeto(int id) async {
     final obj = await (select(
       objetos,
     )..where((o) => o.id.equals(id))).getSingleOrNull();
     if (obj == null) return null;
+
     await (delete(objetos)..where((o) => o.id.equals(id))).go();
     return obj;
+  }
+
+  /// Atualiza um objeto existente e registra nova movimentação de local,
+  /// quando o local realmente muda.
+  Future<void> atualizarObjeto({
+    required int objetoId,
+    required String nome,
+    required String nomeLocal,
+    String? fotoPath,
+    String? fotoLocalPath,
+    String? audioPath,
+    String? descricao,
+    int? categoriaId,
+    int tamanhoBytes = 0,
+  }) {
+    return transaction(() async {
+      final atual =
+          await (select(objetos)
+                ..where((o) => o.id.equals(objetoId) & o.excluidoEm.isNull()))
+              .getSingleOrNull();
+      if (atual == null) throw StateError('Objeto não encontrado.');
+
+      final novoLocalId = await obterOuCriarLocal(
+        nomeLocal,
+        fotoPath: fotoLocalPath,
+      );
+      final agora = DateTime.now();
+      final localMudou = atual.localId != novoLocalId;
+
+      await (update(objetos)..where((o) => o.id.equals(objetoId))).write(
+        ObjetosCompanion(
+          nome: Value(nome.trim()),
+          localId: Value(novoLocalId),
+          fotoPath: Value(fotoPath),
+          audioPath: Value(audioPath),
+          descricao: Value(descricao),
+          categoriaId: Value(categoriaId),
+          tamanhoBytes: Value(tamanhoBytes),
+          confirmadoEm: Value(agora),
+        ),
+      );
+
+      if (localMudou) {
+        await into(historicoLocal).insert(
+          HistoricoLocalCompanion.insert(
+            objetoId: objetoId,
+            localAntigoId: Value(atual.localId),
+            localNovoId: novoLocalId,
+          ),
+        );
+      }
+    });
   }
 
   // -----------------------------------------------------------------
@@ -317,9 +375,10 @@ class CadeDatabase extends _$CadeDatabase {
   /// US11: objetos sem confirmação há mais de [meses] meses.
   Future<List<ObjetoRow>> objetosAntigos({int meses = 11}) {
     final limite = DateTime.now().subtract(Duration(days: meses * 30));
-    return (select(
-      objetos,
-    )..where((o) => o.confirmadoEm.isSmallerThanValue(limite))).get();
+    return (select(objetos)
+          ..where((o) => o.excluidoEm.isNull())
+          ..where((o) => o.confirmadoEm.isSmallerThanValue(limite)))
+        .get();
   }
 
   /// US14: espaço total ocupado pelas mídias, em bytes.

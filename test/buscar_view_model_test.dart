@@ -81,4 +81,19 @@ void main() {
     expect(viewModel.temFiltro, isFalse);
     expect(viewModel.resultados, hasLength(2));
   });
+
+  test('exclui um item do histórico e atualiza a lista', () async {
+    await viewModel.iniciar();
+    expect(viewModel.resultados, hasLength(2));
+
+    final idParaExcluir = viewModel.resultados.first.objeto.id;
+    final ok = await viewModel.excluirItem(idParaExcluir);
+
+    expect(ok, isTrue);
+    expect(viewModel.resultados, hasLength(1));
+    expect(
+      viewModel.resultados.any((item) => item.objeto.id == idParaExcluir),
+      isFalse,
+    );
+  });
 }

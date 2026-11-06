@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _MidiaDeTeste implements MidiaService {
   @override
+  Future<int> tamanhoDe(String? relativo) async => 0;
+  @override
   Future<void> apagar(String? relativo) async {}
 
   @override

@@ -9,13 +9,13 @@ import 'mappers.dart';
 class ObjetoRepository {
   ObjetoRepository({
     required this._banco,
-    required this._midia,
     required this._categorias,
+    required this._midia,
   });
 
   final CadeDatabase _banco;
-  final MidiaService _midia;
   final CategoriaRepository _categorias;
+  final MidiaService _midia;
 
   // ---------------------------------------------------------------
   // Registrar (US01 a US04)
@@ -47,6 +47,42 @@ class ObjetoRepository {
       categoriaId: categoriaId,
       tamanhoBytes: tamanhoBytes,
     );
+  }
+
+  Future<void> atualizar({
+    required int id,
+    required String nome,
+    required String nomeLocal,
+    String? fotoPath,
+    String? fotoLocalPath,
+    String? audioPath,
+    String? descricao,
+    int? categoriaId,
+    int tamanhoBytes = 0,
+  }) async {
+    if (nome.trim().isEmpty || nomeLocal.trim().isEmpty) {
+      throw ArgumentError('Nome e local são obrigatórios.');
+    }
+    final anterior = await _banco.obterObjeto(id);
+    if (anterior == null) throw StateError('Objeto não encontrado.');
+    await _banco.atualizarObjeto(
+      objetoId: id,
+      nome: nome,
+      nomeLocal: nomeLocal,
+      fotoPath: fotoPath,
+      fotoLocalPath: fotoLocalPath,
+      audioPath: audioPath,
+      descricao: descricao,
+      categoriaId: categoriaId,
+      tamanhoBytes: tamanhoBytes,
+    );
+    // Só remove a mídia antiga depois que a atualização foi persistida.
+    if (anterior.objeto.fotoPath != fotoPath) {
+      await _midia.apagar(anterior.objeto.fotoPath);
+    }
+    if (anterior.objeto.audioPath != audioPath) {
+      await _midia.apagar(anterior.objeto.audioPath);
+    }
   }
 
   // ---------------------------------------------------------------
@@ -133,8 +169,7 @@ class ObjetoRepository {
     }).toList();
   }
 
-  /// US10: exclui o objeto e apaga a foto e o áudio dele do aparelho.
-  /// A foto do local NÃO é apagada, porque outros objetos podem usá-la.
+  /// Exclui o registro e suas mídias. A foto compartilhada do local é mantida.
   Future<void> excluir(int id) async {
     final removido = await _banco.excluirObjeto(id);
     if (removido == null) return;

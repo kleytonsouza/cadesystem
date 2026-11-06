@@ -4,29 +4,82 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'registrar_view_model.dart';
+import '../core/base_view_model.dart';
 
-class RegistrarView extends StatefulWidget {
-  const RegistrarView({super.key});
+class RegistrarView extends StatelessWidget {
+  const RegistrarView({this.objetoId, this.focarLocal = false, super.key});
+
+  final int? objetoId;
+  final bool focarLocal;
 
   @override
-  State<RegistrarView> createState() => _RegistrarViewState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => RegistrarViewModel(
+        objetos: context.read(),
+        locais: context.read(),
+        categorias: context.read(),
+        midia: context.read(),
+        permissoes: context.read(),
+      ),
+      child: _RegistrarFormulario(objetoId: objetoId, focarLocal: focarLocal),
+    );
+  }
 }
 
-class _RegistrarViewState extends State<RegistrarView> {
+class _RegistrarFormulario extends StatefulWidget {
+  const _RegistrarFormulario({this.objetoId, required this.focarLocal});
+
+  final int? objetoId;
+  final bool focarLocal;
+
+  @override
+  State<_RegistrarFormulario> createState() => _RegistrarViewState();
+}
+
+class _RegistrarViewState extends State<_RegistrarFormulario> {
   final _formulario = GlobalKey<FormState>();
   final _nome = TextEditingController();
   final _local = TextEditingController();
+  final _focoLocal = FocusNode();
+  bool _carregando = true;
+  bool _registroCarregado = false;
   bool _fotografando = false;
   bool _limpando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final viewModel = context.read<RegistrarViewModel>();
+      await viewModel.iniciar(objetoId: widget.objetoId);
+      if (!mounted) return;
+      _nome.text = viewModel.nome;
+      _local.text = viewModel.nomeLocal;
+      setState(() => _carregando = false);
+      _registroCarregado = viewModel.estado == EstadoTela.sucesso;
+      if (widget.focarLocal && viewModel.estado == EstadoTela.sucesso) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _focoLocal.requestFocus();
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
     _nome.dispose();
     _local.dispose();
+    _focoLocal.dispose();
     super.dispose();
   }
 
   Future<void> _limpar() async {
+    if (widget.objetoId != null) {
+      Navigator.of(context).pop();
+      return;
+    }
     setState(() => _limpando = true);
     try {
       await context.read<RegistrarViewModel>().limparFormulario();
@@ -43,8 +96,15 @@ class _RegistrarViewState extends State<RegistrarView> {
   Future<void> _salvar() async {
     if (!_formulario.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    final salvo = await context.read<RegistrarViewModel>().salvar();
+    final viewModel = context.read<RegistrarViewModel>();
+    final salvo = await viewModel.salvar();
     if (!mounted || !salvo) return;
+
+    if (viewModel.emModoEdicao) {
+      Navigator.of(context).pop();
+      return;
+    }
+
     await _limpar();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -83,7 +143,8 @@ class _RegistrarViewState extends State<RegistrarView> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<RegistrarViewModel>();
-    final ocupado = viewModel.salvando || _fotografando || _limpando;
+    final ocupado =
+        _carregando || viewModel.salvando || _fotografando || _limpando;
     final foto = viewModel.caminhoFotoObjeto;
     final aviso = viewModel.aviso;
 
@@ -127,12 +188,16 @@ class _RegistrarViewState extends State<RegistrarView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Novo objeto',
+                        viewModel.emModoEdicao
+                            ? 'Editar objeto'
+                            : 'Novo objeto',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Registre onde guardou para encontrar depois.',
+                      Text(
+                        viewModel.emModoEdicao
+                            ? 'Atualize as informações deste item e preserve o histórico.'
+                            : 'Registre onde guardou para encontrar depois.',
                       ),
                       const SizedBox(height: 24),
                       const Text('Nome do objeto *'),
@@ -164,6 +229,7 @@ class _RegistrarViewState extends State<RegistrarView> {
                         child: TextFormField(
                           key: const ValueKey('local-objeto'),
                           controller: _local,
+                          focusNode: _focoLocal,
                           enabled: !ocupado,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.location_on_outlined),
@@ -242,10 +308,16 @@ class _RegistrarViewState extends State<RegistrarView> {
                       ],
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed: ocupado ? null : _salvar,
+                        onPressed: ocupado || !_registroCarregado
+                            ? null
+                            : _salvar,
                         icon: const Icon(Icons.save_outlined),
                         label: Text(
-                          viewModel.salvando ? 'Salvando…' : 'Salvar objeto',
+                          viewModel.salvando
+                              ? 'Salvando…'
+                              : viewModel.emModoEdicao
+                              ? 'Salvar alterações'
+                              : 'Salvar objeto',
                         ),
                       ),
                       const SizedBox(height: 8),

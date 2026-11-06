@@ -10,7 +10,6 @@ import 'data/services/cade_database.dart';
 import 'data/services/midia_service.dart';
 import 'data/services/permissao_service.dart';
 import 'ui/home/home_view.dart';
-import 'ui/registrar/registrar_view_model.dart';
 
 /// Mantém as dependências pelo tempo de vida do aplicativo e as libera ao sair.
 class CadeApp extends StatefulWidget {
@@ -51,15 +50,6 @@ class _CadeAppState extends State<CadeApp> {
             midia: context.read(),
             categorias: context.read(),
           ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => RegistrarViewModel(
-            objetos: context.read(),
-            locais: context.read(),
-            categorias: context.read(),
-            midia: context.read(),
-            permissoes: context.read(),
-          )..iniciar(),
         ),
       ],
       child: MaterialApp(

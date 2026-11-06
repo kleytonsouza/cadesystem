@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/objeto_repository.dart';
+import '../../data/services/midia_service.dart';
 import '../core/base_view_model.dart';
 import 'detalhe_view_model.dart';
+import '../registrar/registrar_view.dart';
 
 class DetalheView extends StatefulWidget {
   const DetalheView({required this.objetoId, super.key});
@@ -30,6 +34,26 @@ class _DetalheViewState extends State<DetalheView> {
           return Scaffold(
             appBar: AppBar(
               title: Text(detalhe?.objeto.nome ?? 'Detalhes'),
+              actions: [
+                IconButton(
+                  tooltip: 'Editar local',
+                  icon: const Icon(Icons.edit_location_alt_outlined),
+                  onPressed: detalhe == null || viewModel.ocupado
+                      ? null
+                      : () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => RegistrarView(
+                                objetoId: widget.objetoId,
+                                focarLocal: true,
+                              ),
+                            ),
+                          );
+                          if (!context.mounted) return;
+                          await viewModel.carregar();
+                        },
+                ),
+              ],
             ),
             body: _buildBody(context, viewModel),
           );
@@ -40,6 +64,7 @@ class _DetalheViewState extends State<DetalheView> {
 
   Widget _buildBody(BuildContext context, DetalheViewModel viewModel) {
     final detalhe = viewModel.detalhe;
+    final midia = context.read<MidiaService>();
 
     if (viewModel.estado == EstadoTela.carregando) {
       return const Center(child: CircularProgressIndicator());
@@ -56,6 +81,28 @@ class _DetalheViewState extends State<DetalheView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (detalhe.objeto.fotoPath != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.file(
+                File(midia.caminho(detalhe.objeto.fotoPath!)),
+                width: double.infinity,
+                height: 220,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 220,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(child: Text('Foto indisponível.')),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -73,12 +120,19 @@ class _DetalheViewState extends State<DetalheView> {
                     children: [
                       _Pill(label: 'Local', value: detalhe.local.nome),
                       if (detalhe.categoria != null)
-                        _Pill(label: 'Categoria', value: detalhe.categoria!.nome),
-                      _Pill(label: 'Data', value: _formatarData(detalhe.objeto.registradoEm)),
+                        _Pill(
+                          label: 'Categoria',
+                          value: detalhe.categoria!.nome,
+                        ),
+                      _Pill(
+                        label: 'Data',
+                        value: _formatarData(detalhe.objeto.registradoEm),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  if (detalhe.objeto.descricao != null && detalhe.objeto.descricao!.trim().isNotEmpty)
+                  if (detalhe.objeto.descricao != null &&
+                      detalhe.objeto.descricao!.trim().isNotEmpty)
                     Text(detalhe.objeto.descricao!),
                   if (viewModel.registroAntigo) ...[
                     const SizedBox(height: 12),
@@ -90,10 +144,15 @@ class _DetalheViewState extends State<DetalheView> {
                       ),
                       child: Row(
                         children: const [
-                          Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orange,
+                          ),
                           SizedBox(width: 8),
                           Expanded(
-                            child: Text('Este item não foi confirmado há muito tempo.'),
+                            child: Text(
+                              'Este item não foi confirmado há muito tempo.',
+                            ),
                           ),
                         ],
                       ),
@@ -113,7 +172,9 @@ class _DetalheViewState extends State<DetalheView> {
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('Ainda não houve alteração de local para este item.'),
+                child: Text(
+                  'Ainda não houve alteração de local para este item.',
+                ),
               ),
             )
           else
@@ -127,7 +188,9 @@ class _DetalheViewState extends State<DetalheView> {
                 return ListTile(
                   leading: const Icon(Icons.history),
                   title: Text('${evento.localAntigo} → ${evento.localNovo}'),
-                  subtitle: Text('Atualizado em ${_formatarData(evento.alteradoEm)}'),
+                  subtitle: Text(
+                    'Atualizado em ${_formatarData(evento.alteradoEm)}',
+                  ),
                 );
               },
             ),
@@ -143,7 +206,9 @@ class _DetalheViewState extends State<DetalheView> {
                           if (!mounted || !ok) return;
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Confirmação registrada.')),
+                            const SnackBar(
+                              content: Text('Confirmação registrada.'),
+                            ),
                           );
                         },
                   icon: const Icon(Icons.check_circle_outline),
@@ -160,10 +225,13 @@ class _DetalheViewState extends State<DetalheView> {
                             context: context,
                             builder: (context) => AlertDialog(
                               title: const Text('Excluir item?'),
-                              content: const Text('Essa ação remove o item salvo e seu histórico.'),
+                              content: const Text(
+                                'Essa ação remove o item salvo e seu histórico.',
+                              ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text('Cancelar'),
                                 ),
                                 FilledButton(
