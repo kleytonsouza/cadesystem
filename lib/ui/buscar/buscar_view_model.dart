@@ -87,6 +87,20 @@ class BuscarViewModel extends BaseViewModel {
     return buscar();
   }
 
+  Future<bool> excluirItem(int objetoId) async {
+    try {
+      await _objetos.excluir(objetoId);
+      _resultados.removeWhere((item) => item.objeto.id == objetoId);
+      definirEstado(
+        _resultados.isEmpty ? EstadoTela.vazio : EstadoTela.sucesso,
+      );
+      return true;
+    } catch (_) {
+      mostrarErro('Não foi possível excluir este item do histórico.');
+      return false;
+    }
+  }
+
   /// Recarrega a lista (por exemplo, ao voltar da tela de detalhe).
   Future<void> buscar() async {
     _espera?.cancel();

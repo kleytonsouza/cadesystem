@@ -133,13 +133,10 @@ class ObjetoRepository {
     }).toList();
   }
 
-  /// US10: exclui o objeto e apaga a foto e o áudio dele do aparelho.
-  /// A foto do local NÃO é apagada, porque outros objetos podem usá-la.
+  /// US10: soft delete do objeto. O registro permanece no banco, mas fica
+  /// invisível para a app e para futuras buscas.
   Future<void> excluir(int id) async {
-    final removido = await _banco.excluirObjeto(id);
-    if (removido == null) return;
-    await _midia.apagar(removido.fotoPath);
-    await _midia.apagar(removido.audioPath);
+    await _banco.excluirObjeto(id);
   }
 
   /// US11: objetos sem confirmação há mais de [meses] meses.

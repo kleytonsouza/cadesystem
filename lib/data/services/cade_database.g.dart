@@ -669,6 +669,17 @@ class $ObjetosTable extends Objetos with TableInfo<$ObjetosTable, ObjetoRow> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _excluidoEmMeta = const VerificationMeta(
+    'excluidoEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> excluidoEm = GeneratedColumn<DateTime>(
+    'excluido_em',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -681,6 +692,7 @@ class $ObjetosTable extends Objetos with TableInfo<$ObjetosTable, ObjetoRow> {
     tamanhoBytes,
     registradoEm,
     confirmadoEm,
+    excluidoEm,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -767,6 +779,15 @@ class $ObjetosTable extends Objetos with TableInfo<$ObjetosTable, ObjetoRow> {
         ),
       );
     }
+    if (data.containsKey('excluido_em')) {
+      context.handle(
+        _excluidoEmMeta,
+        excluidoEm.isAcceptableOrUnknown(
+          data['excluido_em']!,
+          _excluidoEmMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -816,6 +837,10 @@ class $ObjetosTable extends Objetos with TableInfo<$ObjetosTable, ObjetoRow> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}confirmado_em'],
       )!,
+      excluidoEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}excluido_em'],
+      ),
     );
   }
 
@@ -842,6 +867,9 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
 
   /// US11: última vez que o usuário confirmou onde o objeto está.
   final DateTime confirmadoEm;
+
+  /// Soft delete do objeto: quando preenchido, o item fica oculto da app.
+  final DateTime? excluidoEm;
   const ObjetoRow({
     required this.id,
     required this.nome,
@@ -853,6 +881,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
     required this.tamanhoBytes,
     required this.registradoEm,
     required this.confirmadoEm,
+    this.excluidoEm,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -875,6 +904,9 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
     map['tamanho_bytes'] = Variable<int>(tamanhoBytes);
     map['registrado_em'] = Variable<DateTime>(registradoEm);
     map['confirmado_em'] = Variable<DateTime>(confirmadoEm);
+    if (!nullToAbsent || excluidoEm != null) {
+      map['excluido_em'] = Variable<DateTime>(excluidoEm);
+    }
     return map;
   }
 
@@ -898,6 +930,9 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
       tamanhoBytes: Value(tamanhoBytes),
       registradoEm: Value(registradoEm),
       confirmadoEm: Value(confirmadoEm),
+      excluidoEm: excluidoEm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(excluidoEm),
     );
   }
 
@@ -917,6 +952,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
       tamanhoBytes: serializer.fromJson<int>(json['tamanhoBytes']),
       registradoEm: serializer.fromJson<DateTime>(json['registradoEm']),
       confirmadoEm: serializer.fromJson<DateTime>(json['confirmadoEm']),
+      excluidoEm: serializer.fromJson<DateTime?>(json['excluidoEm']),
     );
   }
   @override
@@ -933,6 +969,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
       'tamanhoBytes': serializer.toJson<int>(tamanhoBytes),
       'registradoEm': serializer.toJson<DateTime>(registradoEm),
       'confirmadoEm': serializer.toJson<DateTime>(confirmadoEm),
+      'excluidoEm': serializer.toJson<DateTime?>(excluidoEm),
     };
   }
 
@@ -947,6 +984,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
     int? tamanhoBytes,
     DateTime? registradoEm,
     DateTime? confirmadoEm,
+    Value<DateTime?> excluidoEm = const Value.absent(),
   }) => ObjetoRow(
     id: id ?? this.id,
     nome: nome ?? this.nome,
@@ -958,6 +996,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
     tamanhoBytes: tamanhoBytes ?? this.tamanhoBytes,
     registradoEm: registradoEm ?? this.registradoEm,
     confirmadoEm: confirmadoEm ?? this.confirmadoEm,
+    excluidoEm: excluidoEm.present ? excluidoEm.value : this.excluidoEm,
   );
   ObjetoRow copyWithCompanion(ObjetosCompanion data) {
     return ObjetoRow(
@@ -979,6 +1018,9 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
       confirmadoEm: data.confirmadoEm.present
           ? data.confirmadoEm.value
           : this.confirmadoEm,
+      excluidoEm: data.excluidoEm.present
+          ? data.excluidoEm.value
+          : this.excluidoEm,
     );
   }
 
@@ -994,7 +1036,8 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
           ..write('categoriaId: $categoriaId, ')
           ..write('tamanhoBytes: $tamanhoBytes, ')
           ..write('registradoEm: $registradoEm, ')
-          ..write('confirmadoEm: $confirmadoEm')
+          ..write('confirmadoEm: $confirmadoEm, ')
+          ..write('excluidoEm: $excluidoEm')
           ..write(')'))
         .toString();
   }
@@ -1011,6 +1054,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
     tamanhoBytes,
     registradoEm,
     confirmadoEm,
+    excluidoEm,
   );
   @override
   bool operator ==(Object other) =>
@@ -1025,7 +1069,8 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
           other.categoriaId == this.categoriaId &&
           other.tamanhoBytes == this.tamanhoBytes &&
           other.registradoEm == this.registradoEm &&
-          other.confirmadoEm == this.confirmadoEm);
+          other.confirmadoEm == this.confirmadoEm &&
+          other.excluidoEm == this.excluidoEm);
 }
 
 class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
@@ -1039,6 +1084,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
   final Value<int> tamanhoBytes;
   final Value<DateTime> registradoEm;
   final Value<DateTime> confirmadoEm;
+  final Value<DateTime?> excluidoEm;
   const ObjetosCompanion({
     this.id = const Value.absent(),
     this.nome = const Value.absent(),
@@ -1050,6 +1096,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
     this.tamanhoBytes = const Value.absent(),
     this.registradoEm = const Value.absent(),
     this.confirmadoEm = const Value.absent(),
+    this.excluidoEm = const Value.absent(),
   });
   ObjetosCompanion.insert({
     this.id = const Value.absent(),
@@ -1062,6 +1109,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
     this.tamanhoBytes = const Value.absent(),
     this.registradoEm = const Value.absent(),
     this.confirmadoEm = const Value.absent(),
+    this.excluidoEm = const Value.absent(),
   }) : nome = Value(nome),
        localId = Value(localId);
   static Insertable<ObjetoRow> custom({
@@ -1075,6 +1123,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
     Expression<int>? tamanhoBytes,
     Expression<DateTime>? registradoEm,
     Expression<DateTime>? confirmadoEm,
+    Expression<DateTime>? excluidoEm,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1087,6 +1136,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
       if (tamanhoBytes != null) 'tamanho_bytes': tamanhoBytes,
       if (registradoEm != null) 'registrado_em': registradoEm,
       if (confirmadoEm != null) 'confirmado_em': confirmadoEm,
+      if (excluidoEm != null) 'excluido_em': excluidoEm,
     });
   }
 
@@ -1101,6 +1151,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
     Value<int>? tamanhoBytes,
     Value<DateTime>? registradoEm,
     Value<DateTime>? confirmadoEm,
+    Value<DateTime?>? excluidoEm,
   }) {
     return ObjetosCompanion(
       id: id ?? this.id,
@@ -1113,6 +1164,7 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
       tamanhoBytes: tamanhoBytes ?? this.tamanhoBytes,
       registradoEm: registradoEm ?? this.registradoEm,
       confirmadoEm: confirmadoEm ?? this.confirmadoEm,
+      excluidoEm: excluidoEm ?? this.excluidoEm,
     );
   }
 
@@ -1149,6 +1201,9 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
     if (confirmadoEm.present) {
       map['confirmado_em'] = Variable<DateTime>(confirmadoEm.value);
     }
+    if (excluidoEm.present) {
+      map['excluido_em'] = Variable<DateTime>(excluidoEm.value);
+    }
     return map;
   }
 
@@ -1164,7 +1219,8 @@ class ObjetosCompanion extends UpdateCompanion<ObjetoRow> {
           ..write('categoriaId: $categoriaId, ')
           ..write('tamanhoBytes: $tamanhoBytes, ')
           ..write('registradoEm: $registradoEm, ')
-          ..write('confirmadoEm: $confirmadoEm')
+          ..write('confirmadoEm: $confirmadoEm, ')
+          ..write('excluidoEm: $excluidoEm')
           ..write(')'))
         .toString();
   }

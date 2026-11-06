@@ -180,7 +180,28 @@ class HistoricoView extends StatelessWidget {
                             Text('Registrado: ${_formatarData(item.objeto.registradoEm)}'),
                           ],
                         ),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Excluir item',
+                              visualDensity: VisualDensity.compact,
+                              splashRadius: 18,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                              iconSize: 18,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => _excluirItem(context, viewModel, item),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(Icons.chevron_right, size: 18),
+                            ),
+                          ],
+                        ),
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -198,6 +219,53 @@ class HistoricoView extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _excluirItem(
+  BuildContext context,
+  BuscarViewModel viewModel,
+  ObjetoDetalhe item,
+) async {
+  final confirmar = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Excluir item?'),
+      content: Text('Deseja remover "${item.objeto.nome}" do histórico?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Excluir'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmar != true) return;
+
+  final sucesso = await viewModel.excluirItem(item.objeto.id);
+  if (!context.mounted) return;
+
+  if (sucesso) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Item removido do histórico com sucesso.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Não foi possível excluir este item.'),
+      backgroundColor: Colors.red,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }
 
 class _ItemListaCard extends StatelessWidget {
@@ -223,7 +291,28 @@ class _ItemListaCard extends StatelessWidget {
           Text('Categoria: $categoria'),
         ],
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Excluir item',
+            visualDensity: VisualDensity.compact,
+            splashRadius: 18,
+            constraints: const BoxConstraints(
+              minWidth: 32,
+              minHeight: 32,
+            ),
+            iconSize: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _excluirItem(context, context.read<BuscarViewModel>(), item),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 4),
+            child: Icon(Icons.chevron_right, size: 18),
+          ),
+        ],
+      ),
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
