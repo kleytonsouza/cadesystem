@@ -228,18 +228,20 @@ class CadeDatabase extends _$CadeDatabase {
   }
 
   /// US05: busca por texto, já trazendo o local.
-  /// Obs.: o LIKE do SQLite ignora maiúsculas só para letras sem acento.
+  /// Normaliza os nomes em memória para ignorar caixa e acentos no MVP.
+  /// O SQLite embarcado não oferece essa equivalência no LIKE padrão.
   Future<List<ObjetoComLocal>> buscarObjetos(String termo) async {
+    final busca = _normalizarBusca(termo.trim());
     final consulta =
         select(objetos)
             .join([innerJoin(locais, locais.id.equalsExp(objetos.localId))])
           ..where(objetos.excluidoEm.isNull())
-          ..where(objetos.nome.like('%${termo.trim()}%'))
           ..orderBy([OrderingTerm.desc(objetos.registradoEm)]);
 
     final linhas = await consulta.get();
     return linhas
         .map((r) => ObjetoComLocal(r.readTable(objetos), r.readTable(locais)))
+        .where((linha) => _normalizarBusca(linha.objeto.nome).contains(busca))
         .toList();
   }
 
@@ -389,4 +391,18 @@ class CadeDatabase extends _$CadeDatabase {
     )..addColumns([soma])).map((row) => row.read(soma)).getSingle();
     return total ?? 0;
   }
+}
+
+String _normalizarBusca(String texto) {
+  const acentuadas = 'áàâãäåéèêëíìîïóòôõöúùûüçñ';
+  const simples = 'aaaaaaeeeeiiiiooooouuuucn';
+  return texto
+      .toLowerCase()
+      .replaceAll(RegExp(r'[\u0300-\u036f]'), '')
+      .split('')
+      .map((letra) {
+        final indice = acentuadas.indexOf(letra);
+        return indice < 0 ? letra : simples[indice];
+      })
+      .join();
 }

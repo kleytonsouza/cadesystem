@@ -58,7 +58,7 @@ class _BuscarViewState extends State<BuscarView> {
                       controller: _pesquisa,
                       decoration: const InputDecoration(
                         prefixIcon: Icon(Icons.search),
-                        hintText: 'Buscar por nome, local ou categoria',
+                        hintText: 'Buscar pelo nome do objeto',
                         border: OutlineInputBorder(),
                       ),
                       onChanged: viewModel.termoAlterado,
@@ -118,7 +118,24 @@ class HistoricoView extends StatelessWidget {
           final midia = context.read<MidiaService>();
 
           return Scaffold(
-            appBar: AppBar(title: const Text('Histórico')),
+            appBar: AppBar(
+              title: const Text('Histórico'),
+              actions: [
+                IconButton(
+                  tooltip: 'Buscar objetos',
+                  icon: const Icon(Icons.search),
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const BuscarView(),
+                      ),
+                    );
+                    if (!context.mounted) return;
+                    await viewModel.buscar();
+                  },
+                ),
+              ],
+            ),
             body: switch (viewModel.estado) {
               EstadoTela.carregando => const Center(
                 child: CircularProgressIndicator(),
@@ -319,9 +336,22 @@ class _ItemListaCard extends StatelessWidget {
     final categoria = item.categoria?.nome ?? 'Sem categoria';
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: const Icon(Icons.inventory_2_outlined),
+      leading: SizedBox(
+        width: 48,
+        height: 48,
+        child: item.objeto.fotoPath == null
+            ? const Icon(Icons.image_not_supported_outlined)
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(
+                    context.read<MidiaService>().caminho(item.objeto.fotoPath!),
+                  ),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) =>
+                      const Icon(Icons.broken_image_outlined),
+                ),
+              ),
       ),
       title: Text(item.objeto.nome),
       subtitle: Column(
