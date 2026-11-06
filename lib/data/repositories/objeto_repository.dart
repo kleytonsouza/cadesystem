@@ -9,13 +9,14 @@ import 'mappers.dart';
 class ObjetoRepository {
   ObjetoRepository({
     required this._banco,
-    required this._midia,
     required this._categorias,
-  });
+    MidiaService? midia,
+  }) : _midia = midia;
 
   final CadeDatabase _banco;
-  final MidiaService _midia;
   final CategoriaRepository _categorias;
+  // ignore: unused_field
+  final MidiaService? _midia;
 
   // ---------------------------------------------------------------
   // Registrar (US01 a US04)
@@ -38,6 +39,33 @@ class ObjetoRepository {
       throw ArgumentError('Nome e local são obrigatórios.');
     }
     return _banco.registrarObjeto(
+      nome: nome,
+      nomeLocal: nomeLocal,
+      fotoPath: fotoPath,
+      fotoLocalPath: fotoLocalPath,
+      audioPath: audioPath,
+      descricao: descricao,
+      categoriaId: categoriaId,
+      tamanhoBytes: tamanhoBytes,
+    );
+  }
+
+  Future<void> atualizar({
+    required int id,
+    required String nome,
+    required String nomeLocal,
+    String? fotoPath,
+    String? fotoLocalPath,
+    String? audioPath,
+    String? descricao,
+    int? categoriaId,
+    int tamanhoBytes = 0,
+  }) {
+    if (nome.trim().isEmpty || nomeLocal.trim().isEmpty) {
+      throw ArgumentError('Nome e local são obrigatórios.');
+    }
+    return _banco.atualizarObjeto(
+      objetoId: id,
       nome: nome,
       nomeLocal: nomeLocal,
       fotoPath: fotoPath,

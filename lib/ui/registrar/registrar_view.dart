@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import 'registrar_view_model.dart';
 
 class RegistrarView extends StatefulWidget {
-  const RegistrarView({super.key});
+  const RegistrarView({this.objetoId, super.key});
+
+  final int? objetoId;
 
   @override
   State<RegistrarView> createState() => _RegistrarViewState();
@@ -18,6 +20,21 @@ class _RegistrarViewState extends State<RegistrarView> {
   final _local = TextEditingController();
   bool _fotografando = false;
   bool _limpando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.objetoId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final viewModel = context.read<RegistrarViewModel>();
+        await viewModel.prepararEdicao(widget.objetoId!);
+        if (!mounted) return;
+        _nome.text = viewModel.nome;
+        _local.text = viewModel.nomeLocal;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -43,8 +60,19 @@ class _RegistrarViewState extends State<RegistrarView> {
   Future<void> _salvar() async {
     if (!_formulario.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    final salvo = await context.read<RegistrarViewModel>().salvar();
+    final viewModel = context.read<RegistrarViewModel>();
+    final salvo = await viewModel.salvar();
     if (!mounted || !salvo) return;
+
+    if (viewModel.emModoEdicao) {
+      Navigator.of(context).pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Objeto atualizado com sucesso.')),
+      );
+      return;
+    }
+
     await _limpar();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -127,12 +155,14 @@ class _RegistrarViewState extends State<RegistrarView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Novo objeto',
+                        viewModel.emModoEdicao ? 'Editar objeto' : 'Novo objeto',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Registre onde guardou para encontrar depois.',
+                      Text(
+                        viewModel.emModoEdicao
+                            ? 'Atualize as informações deste item e preserve o histórico.'
+                            : 'Registre onde guardou para encontrar depois.',
                       ),
                       const SizedBox(height: 24),
                       const Text('Nome do objeto *'),
@@ -245,7 +275,11 @@ class _RegistrarViewState extends State<RegistrarView> {
                         onPressed: ocupado ? null : _salvar,
                         icon: const Icon(Icons.save_outlined),
                         label: Text(
-                          viewModel.salvando ? 'Salvando…' : 'Salvar objeto',
+                          viewModel.salvando
+                              ? 'Salvando…'
+                              : viewModel.emModoEdicao
+                              ? 'Salvar alterações'
+                              : 'Salvar objeto',
                         ),
                       ),
                       const SizedBox(height: 8),

@@ -42,6 +42,9 @@ class RegistrarViewModel extends BaseViewModel {
   }) : _locaisRepo = locais,
        _categoriasRepo = categorias;
 
+  int? _objetoIdAtual;
+  bool get emModoEdicao => _objetoIdAtual != null;
+
   final ObjetoRepository _objetos;
   final LocalRepository _locaisRepo;
   final CategoriaRepository _categoriasRepo;
@@ -122,11 +125,24 @@ class RegistrarViewModel extends BaseViewModel {
   // Carregamento
   // ---------------------------------------------------------------
 
-  Future<void> iniciar() async {
+  Future<void> iniciar({int? objetoId}) async {
     definirEstado(EstadoTela.carregando);
     try {
       _locais = await _locaisRepo.listar();
       _categorias = await _categoriasRepo.listar();
+      if (objetoId != null) {
+        _objetoIdAtual = objetoId;
+        final detalhe = await _objetos.obter(objetoId);
+        if (detalhe != null) {
+          _nome = detalhe.objeto.nome;
+          _nomeLocal = detalhe.local.nome;
+          _descricao = detalhe.objeto.descricao ?? '';
+          _categoriaId = detalhe.objeto.categoriaId;
+          _fotoObjeto = null;
+          _fotoLocal = null;
+          _audio = null;
+        }
+      }
       definirEstado(EstadoTela.sucesso);
     } catch (_) {
       definirEstado(
@@ -134,6 +150,10 @@ class RegistrarViewModel extends BaseViewModel {
         erro: 'Não foi possível abrir o registro. Tente novamente.',
       );
     }
+  }
+
+  Future<void> prepararEdicao(int objetoId) async {
+    await iniciar(objetoId: objetoId);
   }
 
   // ---------------------------------------------------------------
@@ -275,16 +295,31 @@ class RegistrarViewModel extends BaseViewModel {
           (_fotoLocal?.tamanhoBytes ?? 0) +
           (_audio?.tamanhoBytes ?? 0);
 
-      await _objetos.registrar(
-        nome: _nome,
-        nomeLocal: _nomeLocal,
-        fotoPath: _fotoObjeto?.caminhoRelativo,
-        fotoLocalPath: _fotoLocal?.caminhoRelativo,
-        audioPath: _audio?.caminhoRelativo,
-        descricao: _descricao.trim().isEmpty ? null : _descricao.trim(),
-        categoriaId: _categoriaId,
-        tamanhoBytes: tamanho,
-      );
+      final descricao = _descricao.trim().isEmpty ? null : _descricao.trim();
+      if (emModoEdicao && _objetoIdAtual != null) {
+        await _objetos.atualizar(
+          id: _objetoIdAtual!,
+          nome: _nome,
+          nomeLocal: _nomeLocal,
+          fotoPath: _fotoObjeto?.caminhoRelativo,
+          fotoLocalPath: _fotoLocal?.caminhoRelativo,
+          audioPath: _audio?.caminhoRelativo,
+          descricao: descricao,
+          categoriaId: _categoriaId,
+          tamanhoBytes: tamanho,
+        );
+      } else {
+        await _objetos.registrar(
+          nome: _nome,
+          nomeLocal: _nomeLocal,
+          fotoPath: _fotoObjeto?.caminhoRelativo,
+          fotoLocalPath: _fotoLocal?.caminhoRelativo,
+          audioPath: _audio?.caminhoRelativo,
+          descricao: descricao,
+          categoriaId: _categoriaId,
+          tamanhoBytes: tamanho,
+        );
+      }
 
       // As mídias agora pertencem ao banco: não devem ser apagadas ao sair.
       _fotoObjeto = null;
@@ -308,6 +343,7 @@ class RegistrarViewModel extends BaseViewModel {
   Future<void> limparFormulario() async {
     if (_salvando) return;
     await _limparPendentes();
+    _objetoIdAtual = null;
     _nome = '';
     _nomeLocal = '';
     _descricao = '';

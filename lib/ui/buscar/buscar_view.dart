@@ -10,6 +10,7 @@ import '../../data/services/midia_service.dart';
 import '../../domain/models/objeto_detalhe.dart';
 import '../core/base_view_model.dart';
 import '../detalhe/detalhe_view.dart';
+import '../registrar/registrar_view.dart';
 import 'buscar_view_model.dart';
 
 class BuscarView extends StatefulWidget {
@@ -184,6 +185,19 @@ class HistoricoView extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
+                              tooltip: 'Editar item',
+                              visualDensity: VisualDensity.compact,
+                              splashRadius: 18,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                              iconSize: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => _abrirEdicao(context, item),
+                            ),
+                            IconButton(
                               tooltip: 'Excluir item',
                               visualDensity: VisualDensity.compact,
                               splashRadius: 18,
@@ -219,6 +233,16 @@ class HistoricoView extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _abrirEdicao(BuildContext context, ObjetoDetalhe item) async {
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => RegistrarView(objetoId: item.objeto.id),
+    ),
+  );
+  if (!context.mounted) return;
+  context.read<BuscarViewModel>().buscar();
 }
 
 Future<void> _excluirItem(
@@ -294,6 +318,19 @@ class _ItemListaCard extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton(
+            tooltip: 'Editar item',
+            visualDensity: VisualDensity.compact,
+            splashRadius: 18,
+            constraints: const BoxConstraints(
+              minWidth: 32,
+              minHeight: 32,
+            ),
+            iconSize: 18,
+            color: Theme.of(context).colorScheme.primary,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _abrirEdicao(context, item),
+          ),
           IconButton(
             tooltip: 'Excluir item',
             visualDensity: VisualDensity.compact,

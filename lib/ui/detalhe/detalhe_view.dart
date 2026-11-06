@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/objeto_repository.dart';
+import '../../data/services/midia_service.dart';
 import '../core/base_view_model.dart';
 import 'detalhe_view_model.dart';
 
@@ -40,6 +43,7 @@ class _DetalheViewState extends State<DetalheView> {
 
   Widget _buildBody(BuildContext context, DetalheViewModel viewModel) {
     final detalhe = viewModel.detalhe;
+    final midia = context.read<MidiaService>();
 
     if (viewModel.estado == EstadoTela.carregando) {
       return const Center(child: CircularProgressIndicator());
@@ -56,6 +60,26 @@ class _DetalheViewState extends State<DetalheView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (detalhe.objeto.fotoPath != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.file(
+                File(midia.caminho(detalhe.objeto.fotoPath!)),
+                width: double.infinity,
+                height: 220,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 220,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(child: Text('Foto indisponível.')),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

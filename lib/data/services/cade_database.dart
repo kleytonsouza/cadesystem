@@ -319,6 +319,58 @@ class CadeDatabase extends _$CadeDatabase {
     return obj;
   }
 
+  /// Atualiza um objeto existente e registra nova movimentação de local,
+  /// quando o local realmente muda.
+  Future<void> atualizarObjeto({
+    required int objetoId,
+    required String nome,
+    required String nomeLocal,
+    String? fotoPath,
+    String? fotoLocalPath,
+    String? audioPath,
+    String? descricao,
+    int? categoriaId,
+    int tamanhoBytes = 0,
+  }) {
+    return transaction(() async {
+      final atual = await (select(
+        objetos,
+      )..where((o) => o.id.equals(objetoId) & o.excluidoEm.isNull()))
+          .getSingleOrNull();
+      if (atual == null) return;
+
+      final novoLocalId = await obterOuCriarLocal(
+        nomeLocal,
+        fotoPath: fotoLocalPath,
+      );
+      final agora = DateTime.now();
+      final localMudou = atual.localId != novoLocalId;
+
+      await (update(objetos)..where((o) => o.id.equals(objetoId))).write(
+        ObjetosCompanion(
+          nome: Value(nome.trim()),
+          localId: Value(novoLocalId),
+          fotoPath: Value(fotoPath),
+          audioPath: Value(audioPath),
+          descricao: Value(descricao),
+          categoriaId: Value(categoriaId),
+          tamanhoBytes: Value(tamanhoBytes),
+          confirmadoEm: Value(agora),
+        ),
+      );
+
+      if (localMudou) {
+        await into(historicoLocal).insert(
+          HistoricoLocalCompanion.insert(
+            objetoId: objetoId,
+            localAntigoId: Value(atual.localId),
+            localNovoId: novoLocalId,
+          ),
+        );
+      }
+    });
+  }
+
   // -----------------------------------------------------------------
   // Confiança e manutenção
   // -----------------------------------------------------------------
