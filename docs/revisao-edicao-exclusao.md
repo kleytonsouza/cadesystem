@@ -1,8 +1,11 @@
 # Revisão de edição e exclusão — SCRUM-20 / SCRUM-21
 
 Base: PR #8 (`Feature-Editar-Excluir`, commit `5e6f330`). As correções estão
-na branch `fix/SCRUM-20-21-corrigir-edicao-exclusao`; ainda dependem de
-commit, publicação, revisão e integração.
+na branch `fix/SCRUM-20-21-corrigir-edicao-exclusao`, commit `2cfddaf`,
+integrado à `develop` pelo [PR #9](https://github.com/matheusEmanoels/cadesystem/pull/9)
+após aprovação e [CI verde](https://github.com/matheusEmanoels/cadesystem/actions/runs/42307432674).
+O GitHub também reconheceu o PR #8 como integrado, pois seus commits estão
+incluídos no histórico do PR #9.
 
 ## Problema e correção por arquivo
 
@@ -54,5 +57,5 @@ Os dois testes de cadastro existentes que substituem mídia receberam o
 método de leitura de tamanho exigido pelo novo fluxo.
 
 Os dados pessoais do emulador não são usados nem alterados por esses testes.
-Usabilidade com cinco pessoas, revisão da dupla e CI da correção publicada
-continuam dependendo das respectivas evidências.
+Usabilidade com cinco pessoas e demonstração na Review da dupla continuam
+dependendo das respectivas evidências. O CI da correção publicada passou.

@@ -23,7 +23,10 @@ O critério do SCRUM-79 foi alinhado à orientação atual, com comentário regi
 
 ## Armazenamento e arquitetura
 
-- Banco SQLite local, acessado pelo Drift, com nome `cade` e `schemaVersion = 1`.
+- Banco SQLite local, acessado pelo Drift, com nome `cade` e `schemaVersion = 2`.
+  A versão 2 adicionou `excluidoEm`. A coluna permanece por compatibilidade;
+  a exclusão atual remove definitivamente o objeto e seu histórico, e o
+  repository limpa as mídias próprias, conforme SCRUM-21.
 - Fotos e áudios são arquivos no aparelho; o banco guarda caminhos relativos, como `fotos/123.jpg`.
 - Não há conta de usuário nem sincronização em nuvem na estrutura atual.
 - Models representam os dados do domínio; repositories convertem as linhas do banco e coordenam as operações; ViewModels validam as entradas e controlam o estado.
