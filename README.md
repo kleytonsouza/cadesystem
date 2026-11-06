@@ -301,6 +301,10 @@ Nesta etapa a execução foi validada no Android. A descrição de uso da câmer
 
 ## Backlog priorizado
 
+Esta seção preserva a numeração inicial do projeto. Para a entrega de Gestão
+de Projetos, use o [mapeamento pelas chaves Jira e checklist de fechamento](docs/entrega-gestao.md),
+pois as histórias foram refinadas e renumeradas no planejamento da equipe.
+
 Valor de 1 a 5, estimado pela recorrência nas entrevistas e nas dores do Canvas.
 
 | ID | História | Épico | Valor | MoSCoW | Release |
@@ -352,6 +356,8 @@ Premissa: 14 semanas, sprints de 2 semanas (ajustar ao calendário real). Os mar
 - [Protótipo de baixa fidelidade do fluxo principal (SCRUM-85)](docs/prototipo.md)
 - [Cadastro implementado, explicação do código e validação (SCRUM-86)](docs/cadastro.md)
 - [Identidade visual, imagens e geração dos ícones](docs/identidade-visual.md)
+- [Evidências e checklist da entrega de Gestão de Projetos](docs/entrega-gestao.md)
+- [Roteiro e ficha de resultados da validação com usuários](docs/usabilidade.md)
 - Backlog, Story Map, MVP e Roadmap (artefato interativo)
 - `Cade_Matriz_de_Riscos.xlsx`: riscos do projeto
 

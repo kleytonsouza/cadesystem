@@ -28,4 +28,7 @@ Esse resultado mede a consulta local de teste; a experiência completa no
 aparelho deve ser observada na validação com usuários.
 
 A branch foi atualizada a partir da `develop` após a integração da correção
-do PR #8 pelo PR #9. Commit, push e CI remoto dependem de publicação aprovada.
+do PR #8 pelo PR #9. A busca foi publicada no commit `de100a7` e integrada
+pelo [PR #10](https://github.com/matheusEmanoels/cadesystem/pull/10), com
+[CI aprovado](https://github.com/matheusEmanoels/cadesystem/actions/runs/42308069959).
+A suíte integrada passou com **27 testes**.
