@@ -782,10 +782,7 @@ class $ObjetosTable extends Objetos with TableInfo<$ObjetosTable, ObjetoRow> {
     if (data.containsKey('excluido_em')) {
       context.handle(
         _excluidoEmMeta,
-        excluidoEm.isAcceptableOrUnknown(
-          data['excluido_em']!,
-          _excluidoEmMeta,
-        ),
+        excluidoEm.isAcceptableOrUnknown(data['excluido_em']!, _excluidoEmMeta),
       );
     }
     return context;
@@ -868,7 +865,7 @@ class ObjetoRow extends DataClass implements Insertable<ObjetoRow> {
   /// US11: última vez que o usuário confirmou onde o objeto está.
   final DateTime confirmadoEm;
 
-  /// Soft delete do objeto: quando preenchido, o item fica oculto da app.
+  /// Compatibilidade com bancos da versão 2; a exclusão atual é definitiva.
   final DateTime? excluidoEm;
   const ObjetoRow({
     required this.id,
@@ -2190,6 +2187,7 @@ typedef $$ObjetosTableCreateCompanionBuilder = ObjetosCompanion Function({
   Value<int> tamanhoBytes,
   Value<DateTime> registradoEm,
   Value<DateTime> confirmadoEm,
+  Value<DateTime?> excluidoEm,
 });
 typedef $$ObjetosTableUpdateCompanionBuilder = ObjetosCompanion Function({
   Value<int> id,
@@ -2202,6 +2200,7 @@ typedef $$ObjetosTableUpdateCompanionBuilder = ObjetosCompanion Function({
   Value<int> tamanhoBytes,
   Value<DateTime> registradoEm,
   Value<DateTime> confirmadoEm,
+  Value<DateTime?> excluidoEm,
 });
 
 final class $$ObjetosTableReferences
@@ -2307,6 +2306,11 @@ class $$ObjetosTableFilterComposer
 
   ColumnFilters<DateTime> get confirmadoEm => $composableBuilder(
     column: $table.confirmadoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get excluidoEm => $composableBuilder(
+    column: $table.excluidoEm,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2431,6 +2435,11 @@ class $$ObjetosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get excluidoEm => $composableBuilder(
+    column: $table.excluidoEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$LocaisTableOrderingComposer get localId {
     final $$LocaisTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2514,6 +2523,11 @@ class $$ObjetosTableAnnotationComposer
 
   GeneratedColumn<DateTime> get confirmadoEm => $composableBuilder(
     column: $table.confirmadoEm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get excluidoEm => $composableBuilder(
+    column: $table.excluidoEm,
     builder: (column) => column,
   );
 
@@ -2631,6 +2645,7 @@ class $$ObjetosTableTableManager
                 Value<int> tamanhoBytes = const Value.absent(),
                 Value<DateTime> registradoEm = const Value.absent(),
                 Value<DateTime> confirmadoEm = const Value.absent(),
+                Value<DateTime?> excluidoEm = const Value.absent(),
               }) => ObjetosCompanion(
                 id: id,
                 nome: nome,
@@ -2642,6 +2657,7 @@ class $$ObjetosTableTableManager
                 tamanhoBytes: tamanhoBytes,
                 registradoEm: registradoEm,
                 confirmadoEm: confirmadoEm,
+                excluidoEm: excluidoEm,
               ),
           createCompanionCallback:
               ({
@@ -2655,6 +2671,7 @@ class $$ObjetosTableTableManager
                 Value<int> tamanhoBytes = const Value.absent(),
                 Value<DateTime> registradoEm = const Value.absent(),
                 Value<DateTime> confirmadoEm = const Value.absent(),
+                Value<DateTime?> excluidoEm = const Value.absent(),
               }) => ObjetosCompanion.insert(
                 id: id,
                 nome: nome,
@@ -2666,6 +2683,7 @@ class $$ObjetosTableTableManager
                 tamanhoBytes: tamanhoBytes,
                 registradoEm: registradoEm,
                 confirmadoEm: confirmadoEm,
+                excluidoEm: excluidoEm,
               ),
           withReferenceMapper: (p0) => p0
               .map(

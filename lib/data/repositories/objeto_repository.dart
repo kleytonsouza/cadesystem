@@ -10,12 +10,12 @@ class ObjetoRepository {
   ObjetoRepository({
     required this._banco,
     required this._categorias,
-    this.midia,
+    required this._midia,
   });
 
   final CadeDatabase _banco;
   final CategoriaRepository _categorias;
-  final MidiaService? midia;
+  final MidiaService _midia;
 
   // ---------------------------------------------------------------
   // Registrar (US01 a US04)
@@ -59,11 +59,13 @@ class ObjetoRepository {
     String? descricao,
     int? categoriaId,
     int tamanhoBytes = 0,
-  }) {
+  }) async {
     if (nome.trim().isEmpty || nomeLocal.trim().isEmpty) {
       throw ArgumentError('Nome e local são obrigatórios.');
     }
-    return _banco.atualizarObjeto(
+    final anterior = await _banco.obterObjeto(id);
+    if (anterior == null) throw StateError('Objeto não encontrado.');
+    await _banco.atualizarObjeto(
       objetoId: id,
       nome: nome,
       nomeLocal: nomeLocal,
@@ -74,6 +76,13 @@ class ObjetoRepository {
       categoriaId: categoriaId,
       tamanhoBytes: tamanhoBytes,
     );
+    // Só remove a mídia antiga depois que a atualização foi persistida.
+    if (anterior.objeto.fotoPath != fotoPath) {
+      await _midia.apagar(anterior.objeto.fotoPath);
+    }
+    if (anterior.objeto.audioPath != audioPath) {
+      await _midia.apagar(anterior.objeto.audioPath);
+    }
   }
 
   // ---------------------------------------------------------------
@@ -160,10 +169,12 @@ class ObjetoRepository {
     }).toList();
   }
 
-  /// US10: soft delete do objeto. O registro permanece no banco, mas fica
-  /// invisível para a app e para futuras buscas.
+  /// Exclui o registro e suas mídias. A foto compartilhada do local é mantida.
   Future<void> excluir(int id) async {
-    await _banco.excluirObjeto(id);
+    final removido = await _banco.excluirObjeto(id);
+    if (removido == null) return;
+    await _midia.apagar(removido.fotoPath);
+    await _midia.apagar(removido.audioPath);
   }
 
   /// US11: objetos sem confirmação há mais de [meses] meses.

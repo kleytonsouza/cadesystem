@@ -62,8 +62,7 @@ class Objetos extends Table {
   DateTimeColumn get confirmadoEm =>
       dateTime().withDefault(currentDateAndTime)();
 
-  /// Soft delete: quando preenchido, o objeto está oculto da busca, mas
-  /// preservado no banco para auditoria e restauração futura.
+  /// Compatibilidade com bancos da versão 2; a exclusão atual é definitiva.
   DateTimeColumn get excluidoEm => dateTime().nullable()();
 }
 
@@ -246,10 +245,11 @@ class CadeDatabase extends _$CadeDatabase {
 
   /// US07: detalhe de um objeto (item e local).
   Future<ObjetoComLocal?> obterObjeto(int id) async {
-    final consulta = select(objetos).join([
-      innerJoin(locais, locais.id.equalsExp(objetos.localId)),
-    ])..where(objetos.id.equals(id))
-      ..where(objetos.excluidoEm.isNull());
+    final consulta =
+        select(objetos)
+            .join([innerJoin(locais, locais.id.equalsExp(objetos.localId))])
+          ..where(objetos.id.equals(id))
+          ..where(objetos.excluidoEm.isNull());
 
     final linha = await consulta.getSingleOrNull();
     if (linha == null) return null;
@@ -305,17 +305,14 @@ class CadeDatabase extends _$CadeDatabase {
         .get();
   }
 
-  /// US10: soft delete do objeto. Mantém o registro preservado no banco,
-  /// ocultando-o da busca e dos detalhes do app.
+  /// Exclui o registro e o histórico; devolve as mídias para limpeza no repository.
   Future<ObjetoRow?> excluirObjeto(int id) async {
     final obj = await (select(
       objetos,
-    )..where((o) => o.id.equals(id) & o.excluidoEm.isNull())).getSingleOrNull();
+    )..where((o) => o.id.equals(id))).getSingleOrNull();
     if (obj == null) return null;
 
-    await (update(objetos)
-          ..where((o) => o.id.equals(id)))
-        .write(ObjetosCompanion(excluidoEm: Value(DateTime.now())));
+    await (delete(objetos)..where((o) => o.id.equals(id))).go();
     return obj;
   }
 
@@ -333,11 +330,11 @@ class CadeDatabase extends _$CadeDatabase {
     int tamanhoBytes = 0,
   }) {
     return transaction(() async {
-      final atual = await (select(
-        objetos,
-      )..where((o) => o.id.equals(objetoId) & o.excluidoEm.isNull()))
-          .getSingleOrNull();
-      if (atual == null) return;
+      final atual =
+          await (select(objetos)
+                ..where((o) => o.id.equals(objetoId) & o.excluidoEm.isNull()))
+              .getSingleOrNull();
+      if (atual == null) throw StateError('Objeto não encontrado.');
 
       final novoLocalId = await obterOuCriarLocal(
         nomeLocal,
@@ -378,9 +375,7 @@ class CadeDatabase extends _$CadeDatabase {
   /// US11: objetos sem confirmação há mais de [meses] meses.
   Future<List<ObjetoRow>> objetosAntigos({int meses = 11}) {
     final limite = DateTime.now().subtract(Duration(days: meses * 30));
-    return (select(
-      objetos,
-    )
+    return (select(objetos)
           ..where((o) => o.excluidoEm.isNull())
           ..where((o) => o.confirmadoEm.isSmallerThanValue(limite)))
         .get();

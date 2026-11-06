@@ -48,9 +48,7 @@ class _BuscarViewState extends State<BuscarView> {
           final viewModel = context.watch<BuscarViewModel>();
 
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Itens salvos'),
-            ),
+            appBar: AppBar(title: const Text('Itens salvos')),
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -66,9 +64,7 @@ class _BuscarViewState extends State<BuscarView> {
                       onChanged: viewModel.termoAlterado,
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
-                      child: _buildConteudo(viewModel),
-                    ),
+                    Expanded(child: _buildConteudo(viewModel)),
                   ],
                 ),
               ),
@@ -122,111 +118,131 @@ class HistoricoView extends StatelessWidget {
           final midia = context.read<MidiaService>();
 
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Histórico'),
-            ),
+            appBar: AppBar(title: const Text('Histórico')),
             body: switch (viewModel.estado) {
               EstadoTela.carregando => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: CircularProgressIndicator(),
+              ),
               EstadoTela.erro => Center(
-                  child: Text(viewModel.mensagemErro ?? 'Não foi possível carregar.'),
+                child: Text(
+                  viewModel.mensagemErro ?? 'Não foi possível carregar.',
                 ),
+              ),
               EstadoTela.vazio => const Center(
-                  child: Text('Nenhum item no histórico.'),
-                ),
+                child: Text('Nenhum item no histórico.'),
+              ),
               EstadoTela.inicial || EstadoTela.sucesso => ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: viewModel.resultados.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = viewModel.resultados[index];
-                    final foto = item.objeto.fotoPath;
+                padding: const EdgeInsets.all(16),
+                itemCount: viewModel.resultados.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = viewModel.resultados[index];
+                  final foto = item.objeto.fotoPath;
 
-                    return Card(
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(12),
-                        leading: SizedBox(
-                          width: 72,
-                          height: 72,
-                          child: foto == null
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.image_not_supported_outlined),
-                                )
-                              : ClipRRect(
+                  return Card(
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
+                      leading: SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: foto == null
+                            ? Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    File(midia.caminho(foto)),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.broken_image_outlined),
-                                    ),
-                                  ),
                                 ),
-                        ),
-                        title: Text(item.objeto.nome),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text('Local: ${item.local.nome}'),
-                            Text('Registrado: ${_formatarData(item.objeto.registradoEm)}'),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: 'Editar item',
-                              visualDensity: VisualDensity.compact,
-                              splashRadius: 18,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
+                                child: const Icon(
+                                  Icons.image_not_supported_outlined,
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(midia.caminho(foto)),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.broken_image_outlined,
+                                        ),
+                                      ),
+                                ),
                               ),
-                              iconSize: 18,
-                              color: Theme.of(context).colorScheme.primary,
-                              icon: const Icon(Icons.edit_outlined),
-                              onPressed: () => _abrirEdicao(context, item),
-                            ),
-                            IconButton(
-                              tooltip: 'Excluir item',
-                              visualDensity: VisualDensity.compact,
-                              splashRadius: 18,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                              iconSize: 18,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () => _excluirItem(context, viewModel, item),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: Icon(Icons.chevron_right, size: 18),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => DetalheView(objetoId: item.objeto.id),
-                            ),
-                          );
-                        },
                       ),
-                    );
-                  },
-                ),
+                      title: Text(item.objeto.nome),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Text('Local: ${item.local.nome}'),
+                          Text(
+                            'Registrado: ${_formatarData(item.objeto.registradoEm)}',
+                          ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Editar item',
+                            visualDensity: VisualDensity.compact,
+                            splashRadius: 18,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            iconSize: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () => _abrirEdicao(context, item),
+                          ),
+                          IconButton(
+                            tooltip: 'Excluir item',
+                            visualDensity: VisualDensity.compact,
+                            splashRadius: 18,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            iconSize: 18,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () =>
+                                _excluirItem(context, viewModel, item),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4),
+                            child: Icon(Icons.chevron_right, size: 18),
+                          ),
+                        ],
+                      ),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                DetalheView(objetoId: item.objeto.id),
+                          ),
+                        );
+                        if (!context.mounted) return;
+                        await viewModel.buscar();
+                      },
+                    ),
+                  );
+                },
+              ),
             },
           );
         },
@@ -310,10 +326,7 @@ class _ItemListaCard extends StatelessWidget {
       title: Text(item.objeto.nome),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Local: $local'),
-          Text('Categoria: $categoria'),
-        ],
+        children: [Text('Local: $local'), Text('Categoria: $categoria')],
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -322,10 +335,7 @@ class _ItemListaCard extends StatelessWidget {
             tooltip: 'Editar item',
             visualDensity: VisualDensity.compact,
             splashRadius: 18,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
-            ),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 18,
             color: Theme.of(context).colorScheme.primary,
             icon: const Icon(Icons.edit_outlined),
@@ -335,14 +345,12 @@ class _ItemListaCard extends StatelessWidget {
             tooltip: 'Excluir item',
             visualDensity: VisualDensity.compact,
             splashRadius: 18,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
-            ),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 18,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             icon: const Icon(Icons.delete_outline),
-            onPressed: () => _excluirItem(context, context.read<BuscarViewModel>(), item),
+            onPressed: () =>
+                _excluirItem(context, context.read<BuscarViewModel>(), item),
           ),
           const Padding(
             padding: EdgeInsets.only(left: 4),
@@ -350,12 +358,14 @@ class _ItemListaCard extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () {
-        Navigator.of(context).push(
+      onTap: () async {
+        await Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => DetalheView(objetoId: item.objeto.id),
           ),
         );
+        if (!context.mounted) return;
+        await context.read<BuscarViewModel>().buscar();
       },
     );
   }

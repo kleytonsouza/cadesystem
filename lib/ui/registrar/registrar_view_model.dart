@@ -61,6 +61,9 @@ class RegistrarViewModel extends BaseViewModel {
   MidiaSalva? _fotoObjeto;
   MidiaSalva? _fotoLocal;
   MidiaSalva? _audio;
+  String? _fotoObjetoOriginal;
+  String? _audioOriginal;
+  bool _removerFotoOriginal = false;
 
   bool _gravando = false;
   bool _salvando = false;
@@ -77,8 +80,11 @@ class RegistrarViewModel extends BaseViewModel {
   String get nomeLocal => _nomeLocal;
   int? get categoriaId => _categoriaId;
   MidiaSalva? get fotoObjeto => _fotoObjeto;
+  String? get _fotoPath =>
+      _fotoObjeto?.caminhoRelativo ??
+      (_removerFotoOriginal ? null : _fotoObjetoOriginal);
   String? get caminhoFotoObjeto =>
-      _fotoObjeto == null ? null : _midia.caminho(_fotoObjeto!.caminhoRelativo);
+      _fotoPath == null ? null : _midia.caminho(_fotoPath!);
   MidiaSalva? get fotoLocal => _fotoLocal;
   MidiaSalva? get audio => _audio;
   bool get gravando => _gravando;
@@ -126,6 +132,7 @@ class RegistrarViewModel extends BaseViewModel {
   // ---------------------------------------------------------------
 
   Future<void> iniciar({int? objetoId}) async {
+    await limparFormulario();
     definirEstado(EstadoTela.carregando);
     try {
       _locais = await _locaisRepo.listar();
@@ -133,15 +140,22 @@ class RegistrarViewModel extends BaseViewModel {
       if (objetoId != null) {
         _objetoIdAtual = objetoId;
         final detalhe = await _objetos.obter(objetoId);
-        if (detalhe != null) {
-          _nome = detalhe.objeto.nome;
-          _nomeLocal = detalhe.local.nome;
-          _descricao = detalhe.objeto.descricao ?? '';
-          _categoriaId = detalhe.objeto.categoriaId;
-          _fotoObjeto = null;
-          _fotoLocal = null;
-          _audio = null;
+        if (detalhe == null) {
+          definirEstado(
+            EstadoTela.erro,
+            erro: 'Este objeto não foi encontrado.',
+          );
+          return;
         }
+        _nome = detalhe.objeto.nome;
+        _nomeLocal = detalhe.local.nome;
+        _descricao = detalhe.objeto.descricao ?? '';
+        _categoriaId = detalhe.objeto.categoriaId;
+        _fotoObjeto = null;
+        _fotoLocal = null;
+        _audio = null;
+        _fotoObjetoOriginal = detalhe.objeto.fotoPath;
+        _audioOriginal = detalhe.objeto.audioPath;
       }
       definirEstado(EstadoTela.sucesso);
     } catch (_) {
@@ -188,6 +202,7 @@ class RegistrarViewModel extends BaseViewModel {
     if (nova == null) return;
     await _midia.apagar(_fotoObjeto?.caminhoRelativo);
     _fotoObjeto = nova;
+    _removerFotoOriginal = false;
     notifyListeners();
   }
 
@@ -202,6 +217,7 @@ class RegistrarViewModel extends BaseViewModel {
   Future<void> removerFotoDoObjeto() async {
     await _midia.apagar(_fotoObjeto?.caminhoRelativo);
     _fotoObjeto = null;
+    _removerFotoOriginal = true;
     notifyListeners();
   }
 
@@ -290,10 +306,12 @@ class RegistrarViewModel extends BaseViewModel {
         _fotoLocal = null;
       }
 
+      final fotoPath = _fotoPath;
+      final audioPath = _audio?.caminhoRelativo ?? _audioOriginal;
       final tamanho =
-          (_fotoObjeto?.tamanhoBytes ?? 0) +
+          (_fotoObjeto?.tamanhoBytes ?? await _midia.tamanhoDe(fotoPath)) +
           (_fotoLocal?.tamanhoBytes ?? 0) +
-          (_audio?.tamanhoBytes ?? 0);
+          (_audio?.tamanhoBytes ?? await _midia.tamanhoDe(audioPath));
 
       final descricao = _descricao.trim().isEmpty ? null : _descricao.trim();
       if (emModoEdicao && _objetoIdAtual != null) {
@@ -301,9 +319,9 @@ class RegistrarViewModel extends BaseViewModel {
           id: _objetoIdAtual!,
           nome: _nome,
           nomeLocal: _nomeLocal,
-          fotoPath: _fotoObjeto?.caminhoRelativo,
+          fotoPath: fotoPath,
           fotoLocalPath: _fotoLocal?.caminhoRelativo,
-          audioPath: _audio?.caminhoRelativo,
+          audioPath: audioPath,
           descricao: descricao,
           categoriaId: _categoriaId,
           tamanhoBytes: tamanho,
@@ -322,6 +340,9 @@ class RegistrarViewModel extends BaseViewModel {
       }
 
       // As mídias agora pertencem ao banco: não devem ser apagadas ao sair.
+      _fotoObjetoOriginal = fotoPath;
+      _audioOriginal = audioPath;
+      _removerFotoOriginal = false;
       _fotoObjeto = null;
       _fotoLocal = null;
       _audio = null;
@@ -344,6 +365,9 @@ class RegistrarViewModel extends BaseViewModel {
     if (_salvando) return;
     await _limparPendentes();
     _objetoIdAtual = null;
+    _fotoObjetoOriginal = null;
+    _audioOriginal = null;
+    _removerFotoOriginal = false;
     _nome = '';
     _nomeLocal = '';
     _descricao = '';
