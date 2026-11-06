@@ -10,13 +10,12 @@ class ObjetoRepository {
   ObjetoRepository({
     required this._banco,
     required this._categorias,
-    MidiaService? midia,
-  }) : _midia = midia;
+    this.midia,
+  });
 
   final CadeDatabase _banco;
   final CategoriaRepository _categorias;
-  // ignore: unused_field
-  final MidiaService? _midia;
+  final MidiaService? midia;
 
   // ---------------------------------------------------------------
   // Registrar (US01 a US04)
