@@ -30,6 +30,4 @@ class ConfiguracoesViewModel extends BaseViewModel {
           erro: 'Não foi possível calcular o espaço usado.');
     }
   }
-
-  // TODO (US15, R2): exportarBackup() e restaurarBackup().
 }
