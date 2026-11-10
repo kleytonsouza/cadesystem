@@ -33,6 +33,7 @@ class ObjetoRepository {
     String? descricao,
     int? categoriaId,
     int tamanhoBytes = 0,
+    List<String> fotosExtras = const [],
   }) {
     if (nome.trim().isEmpty || nomeLocal.trim().isEmpty) {
       throw ArgumentError('Nome e local são obrigatórios.');
@@ -46,6 +47,7 @@ class ObjetoRepository {
       descricao: descricao,
       categoriaId: categoriaId,
       tamanhoBytes: tamanhoBytes,
+      fotosExtras: fotosExtras,
     );
   }
 
@@ -59,12 +61,14 @@ class ObjetoRepository {
     String? descricao,
     int? categoriaId,
     int tamanhoBytes = 0,
+    List<String>? fotosExtras,
   }) async {
     if (nome.trim().isEmpty || nomeLocal.trim().isEmpty) {
       throw ArgumentError('Nome e local são obrigatórios.');
     }
     final anterior = await _banco.obterObjeto(id);
     if (anterior == null) throw StateError('Objeto não encontrado.');
+    final fotosAnteriores = await _banco.listarFotosExtras(id);
     await _banco.atualizarObjeto(
       objetoId: id,
       nome: nome,
@@ -75,6 +79,7 @@ class ObjetoRepository {
       descricao: descricao,
       categoriaId: categoriaId,
       tamanhoBytes: tamanhoBytes,
+      fotosExtras: fotosExtras,
     );
     // Só remove a mídia antiga depois que a atualização foi persistida.
     if (anterior.objeto.fotoPath != fotoPath) {
@@ -82,6 +87,13 @@ class ObjetoRepository {
     }
     if (anterior.objeto.audioPath != audioPath) {
       await _midia.apagar(anterior.objeto.audioPath);
+    }
+    if (fotosExtras != null) {
+      for (final caminho in fotosAnteriores) {
+        if (!fotosExtras.contains(caminho) && caminho != fotoPath) {
+          await _midia.apagar(caminho);
+        }
+      }
     }
   }
 
@@ -130,6 +142,7 @@ class ObjetoRepository {
       objeto: linha.objeto.paraModel(),
       local: linha.local.paraModel(),
       categoria: categorias[linha.objeto.categoriaId],
+      fotosExtras: await _banco.listarFotosExtras(id),
     );
   }
 
@@ -171,10 +184,14 @@ class ObjetoRepository {
 
   /// Exclui o registro e suas mídias. A foto compartilhada do local é mantida.
   Future<void> excluir(int id) async {
+    final fotosExtras = await _banco.listarFotosExtras(id);
     final removido = await _banco.excluirObjeto(id);
     if (removido == null) return;
     await _midia.apagar(removido.fotoPath);
     await _midia.apagar(removido.audioPath);
+    for (final caminho in fotosExtras) {
+      await _midia.apagar(caminho);
+    }
   }
 
   /// US11: objetos sem confirmação há mais de [meses] meses.

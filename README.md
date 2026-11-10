@@ -24,7 +24,7 @@ Baseadas nas entrevistas com Claites, José e Ricardo.
 
 ## Funcionalidades
 
-- **Registrar:** foto do objeto, nome curto, local (texto e foto, reaproveitando locais já usados) e áudio.
+- **Registrar:** fotos do objeto, nome curto, local (texto e foto, reaproveitando locais já usados) e áudio.
 - **Encontrar:** busca por texto com foto na primeira tela, filtro por local ou categoria.
 - **Consultar:** detalhe do objeto com foto do item, foto do local, nome, data do registro e áudio.
 - **Manter:** mudar o local, excluir objeto ou local e aviso de registro antigo.
@@ -239,25 +239,19 @@ fvm dart run build_runner build
 
 Isso cria o arquivo `cade_database.g.dart`, que não deve ser editado à mão. Durante o desenvolvimento, `dart run build_runner watch` regenera o código a cada alteração.
 
-**4. Salvar o esquema da versão 1** (uma única vez, antes de alterar qualquer tabela)
-
-```powershell
-dart run drift_dev make-migrations
-```
-
 ### Como alterar o banco no futuro
 
 1. Altere as tabelas em `cade_database.dart`.
 2. Aumente o `schemaVersion`.
-3. Rode `dart run drift_dev make-migrations`. O Drift gera o código de apoio da migração e os testes.
-4. Escreva o passo da migração no `onUpgrade` (`stepByStep`) e rode os testes gerados.
+3. Adicione o passo correspondente no `onUpgrade` e regenere `cade_database.g.dart` com `fvm dart run build_runner build`.
+4. Teste a abertura de um banco da versão anterior; `test/migracao_fotos_test.dart` verifica a passagem da versão 2 para a 3.
 
 Nunca edite uma migração que já foi lançada.
 
 ### Observações
 
-- **Desenvolvimento no emulador:** se o app já rodou com uma versão antiga do banco, desinstale-o antes de rodar de novo, para o banco ser recriado.
-- **Exclusão de arquivos:** `excluirObjeto` devolve a linha apagada, para o repository poder remover também a foto e o áudio do aparelho.
+- **Desenvolvimento no emulador:** mantenha o app instalado para exercitar a migração dos dados existentes.
+- **Exclusão de arquivos:** o repository remove a foto principal, as fotos adicionais e o áudio depois de excluir o registro.
 - **Busca com acento:** o `LIKE` do SQLite ignora maiúsculas apenas em letras sem acento. A normalização exigida pelo SCRUM-17 ainda está pendente e deve acompanhar a implementação da busca.
 - **Testes:** o `CadeDatabase` aceita um executor no construtor, então os testes podem usar um banco em memória em vez do arquivo real.
 

@@ -59,6 +59,8 @@ class RegistrarViewModel extends BaseViewModel {
 
   // Mídias capturadas e ainda não salvas no banco
   MidiaSalva? _fotoObjeto;
+  final List<MidiaSalva> _fotosExtrasPendentes = [];
+  final List<String> _fotosExtrasOriginais = [];
   MidiaSalva? _fotoLocal;
   MidiaSalva? _audio;
   String? _fotoObjetoOriginal;
@@ -86,6 +88,11 @@ class RegistrarViewModel extends BaseViewModel {
       (_removerFotoOriginal ? null : _fotoObjetoOriginal);
   String? get caminhoFotoObjeto =>
       _fotoPath == null ? null : _midia.caminho(_fotoPath!);
+  List<String> get fotosObjeto => [
+    ?_fotoPath,
+    ..._fotosExtrasOriginais,
+    ..._fotosExtrasPendentes.map((f) => f.caminhoRelativo),
+  ];
   MidiaSalva? get fotoLocal => _fotoLocal;
   MidiaSalva? get audio => _audio;
   String? get caminhoAudio =>
@@ -160,6 +167,9 @@ class RegistrarViewModel extends BaseViewModel {
         _fotoLocal = null;
         _audio = null;
         _fotoObjetoOriginal = detalhe.objeto.fotoPath;
+        _fotosExtrasOriginais
+          ..clear()
+          ..addAll(detalhe.fotosExtras);
         _audioOriginal = detalhe.objeto.audioPath;
         _removerAudioOriginal = false;
       }
@@ -209,6 +219,35 @@ class RegistrarViewModel extends BaseViewModel {
     await _midia.apagar(_fotoObjeto?.caminhoRelativo);
     _fotoObjeto = nova;
     _removerFotoOriginal = false;
+    notifyListeners();
+  }
+
+  Future<void> adicionarFotoDoObjeto() async {
+    final nova = await _fotografar();
+    if (nova == null) return;
+    if (_fotoPath == null) {
+      _fotoObjeto = nova;
+      _removerFotoOriginal = false;
+    } else {
+      _fotosExtrasPendentes.add(nova);
+    }
+    notifyListeners();
+  }
+
+  Future<void> removerFoto(String caminho) async {
+    if (caminho == _fotoPath) {
+      await removerFotoDoObjeto();
+      return;
+    }
+    _fotosExtrasOriginais.remove(caminho);
+    final indice = _fotosExtrasPendentes.indexWhere(
+      (f) => f.caminhoRelativo == caminho,
+    );
+    if (indice >= 0) {
+      await _midia.apagar(
+        _fotosExtrasPendentes.removeAt(indice).caminhoRelativo,
+      );
+    }
     notifyListeners();
   }
 
@@ -314,10 +353,16 @@ class RegistrarViewModel extends BaseViewModel {
         _fotoLocal = null;
       }
 
-      final fotoPath = _fotoPath;
+      final caminhosFotos = fotosObjeto;
+      final fotoPath = caminhosFotos.isEmpty ? null : caminhosFotos.first;
+      final fotosExtras = caminhosFotos.skip(1).toList();
       final audioPath = caminhoAudio;
+      var tamanhoFotos = 0;
+      for (final caminho in caminhosFotos) {
+        tamanhoFotos += await _midia.tamanhoDe(caminho);
+      }
       final tamanho =
-          (_fotoObjeto?.tamanhoBytes ?? await _midia.tamanhoDe(fotoPath)) +
+          tamanhoFotos +
           (_fotoLocal?.tamanhoBytes ?? 0) +
           (_audio?.tamanhoBytes ?? await _midia.tamanhoDe(audioPath));
 
@@ -333,22 +378,28 @@ class RegistrarViewModel extends BaseViewModel {
           descricao: descricao,
           categoriaId: _categoriaId,
           tamanhoBytes: tamanho,
+          fotosExtras: fotosExtras,
         );
       } else {
         await _objetos.registrar(
           nome: _nome,
           nomeLocal: _nomeLocal,
-          fotoPath: _fotoObjeto?.caminhoRelativo,
+          fotoPath: fotoPath,
           fotoLocalPath: _fotoLocal?.caminhoRelativo,
           audioPath: _audio?.caminhoRelativo,
           descricao: descricao,
           categoriaId: _categoriaId,
           tamanhoBytes: tamanho,
+          fotosExtras: fotosExtras,
         );
       }
 
       // As mídias agora pertencem ao banco: não devem ser apagadas ao sair.
       _fotoObjetoOriginal = fotoPath;
+      _fotosExtrasOriginais
+        ..clear()
+        ..addAll(fotosExtras);
+      _fotosExtrasPendentes.clear();
       _audioOriginal = audioPath;
       _removerFotoOriginal = false;
       _removerAudioOriginal = false;
@@ -375,6 +426,8 @@ class RegistrarViewModel extends BaseViewModel {
     await _limparPendentes();
     _objetoIdAtual = null;
     _fotoObjetoOriginal = null;
+    _fotosExtrasOriginais.clear();
+    _fotosExtrasPendentes.clear();
     _audioOriginal = null;
     _removerFotoOriginal = false;
     _removerAudioOriginal = false;
@@ -401,6 +454,9 @@ class RegistrarViewModel extends BaseViewModel {
   Future<void> _limparPendentes() async {
     if (_gravando) await _midia.cancelarGravacao();
     await _midia.apagar(_fotoObjeto?.caminhoRelativo);
+    for (final foto in _fotosExtrasPendentes) {
+      await _midia.apagar(foto.caminhoRelativo);
+    }
     await _midia.apagar(_fotoLocal?.caminhoRelativo);
     await _midia.apagar(_audio?.caminhoRelativo);
   }

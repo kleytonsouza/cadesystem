@@ -23,14 +23,15 @@ O critério do SCRUM-79 foi alinhado à orientação atual, com comentário regi
 
 ## Armazenamento e arquitetura
 
-- Banco SQLite local, acessado pelo Drift, com nome `cade` e `schemaVersion = 2`.
-  A versão 2 adicionou `excluidoEm`. A coluna permanece por compatibilidade;
+- Banco SQLite local, acessado pelo Drift, com nome `cade` e `schemaVersion = 3`.
+  A versão 2 adicionou `excluidoEm`; a versão 3 adicionou `fotos_objeto`.
+  A coluna `excluidoEm` permanece por compatibilidade;
   a exclusão atual remove definitivamente o objeto e seu histórico, e o
   repository limpa as mídias próprias, conforme SCRUM-21.
 - Fotos e áudios são arquivos no aparelho; o banco guarda caminhos relativos, como `fotos/123.jpg`.
 - Não há conta de usuário nem sincronização em nuvem na estrutura atual.
 - Models representam os dados do domínio; repositories convertem as linhas do banco e coordenam as operações; ViewModels validam as entradas e controlam o estado.
-- Categorias e histórico já existem no código. Áudio está previsto para Release 2 no planejamento; a existência desses campos não significa que todas as telas e funcionalidades estejam prontas.
+- Categorias, histórico, áudio e fotos adicionais já são usados pelas telas do aplicativo.
 
 ## Tabelas existentes
 
@@ -41,7 +42,7 @@ O critério do SCRUM-79 foi alinhado à orientação atual, com comentário regi
 | `id` | Inteiro | Não | Identificador gerado pelo banco |
 | `nome` | Texto | Não | Nome do objeto; espaços nas extremidades são removidos ao registrar |
 | `localId` | Inteiro | Não | Referência a `locais.id` |
-| `fotoPath` | Texto | Sim | Caminho relativo da foto do objeto |
+| `fotoPath` | Texto | Sim | Caminho relativo da foto principal do objeto |
 | `audioPath` | Texto | Sim | Caminho relativo do áudio |
 | `descricao` | Texto | Sim | Descrição complementar |
 | `categoriaId` | Inteiro | Sim | Referência a `categorias.id` |
@@ -50,6 +51,17 @@ O critério do SCRUM-79 foi alinhado à orientação atual, com comentário regi
 | `confirmadoEm` | Data e hora | Não | Última confirmação de localização; começa com o momento da inserção |
 
 Há índices para nome, local e categoria. A coluna de nome não define limite de 50 caracteres nem bloqueia texto vazio por si só; a validação de preenchimento está no ViewModel e no repository.
+
+### `fotos_objeto`
+
+| Campo Dart | Tipo | Aceita nulo? | Papel |
+|---|---|---|---|
+| `id` | Inteiro | Não | Identificador gerado pelo banco |
+| `objetoId` | Inteiro | Não | Referência ao objeto; excluído junto com ele |
+| `caminho` | Texto | Não | Caminho relativo de uma foto adicional |
+| `ordem` | Inteiro | Não | Ordem de exibição das fotos adicionais |
+
+A migração da versão 2 cria esta tabela sem alterar a foto principal dos registros existentes. O teste `migracao_fotos_test.dart` abre um banco antigo e verifica a preservação do registro.
 
 ### `locais`
 
