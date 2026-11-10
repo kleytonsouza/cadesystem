@@ -129,7 +129,7 @@ Todos estendem `BaseViewModel`, que guarda o estado da tela (`inicial`, `carrega
 | `RegistrarViewModel` | Formulário (só nome e local são obrigatórios), fotos, áudio e avisos de permissão. Apaga as mídias capturadas se o usuário sair sem salvar | US01 a US04, US13 |
 | `BuscarViewModel` | Busca com espera de 300 ms após a última letra, filtros por local e categoria, descarte de consultas antigas | US05, US06 |
 | `DetalheViewModel` | Carrega o objeto, muda o local, exclui e confirma que "continua aqui" | US07 a US11 |
-| `ConfiguracoesViewModel` | Espaço usado pelas mídias (backup na R2) | US14, US15 |
+| `ConfiguracoesViewModel` | Espaço usado pelas mídias e exportação manual do backup | US14, US15 |
 
 ### Repositories
 
@@ -168,8 +168,12 @@ final midia = await MidiaService.criar();
 
 ### Configuração nas plataformas
 
-- **Android** (`android/app/src/main/AndroidManifest.xml`): o cadastro declara `CAMERA`, com câmera opcional no aparelho. `RECORD_AUDIO` deve acompanhar a ativação do áudio na Release 2; a tela atual não pede microfone.
-- **iOS** (`ios/Runner/Info.plist`): o cadastro declara `NSCameraUsageDescription`. Este projeto usa Swift Package Manager, e a versão instalada de `permission_handler_apple` resolve a câmera a partir dessa chave. Descrições de microfone e galeria devem acompanhar a implementação desses fluxos. A configuração ainda precisa ser validada em um ambiente Apple.
+- **Android** (`android/app/src/main/AndroidManifest.xml`): o cadastro declara `CAMERA` e `RECORD_AUDIO`. Antes de pedir acesso ao microfone, a tela explica o motivo.
+- **iOS** (`ios/Runner/Info.plist`): o cadastro declara `NSCameraUsageDescription` e `NSMicrophoneUsageDescription`. A compilação iOS ainda precisa ser validada em um ambiente Apple.
+
+### Backup manual
+
+Em Configurações, **Exportar backup** permite escolher onde salvar um ZIP. Ele contém `cade.sqlite`, a pasta `midias/` e `manifesto.json`. O banco é copiado com `VACUUM INTO` para incluir os registros confirmados sem depender dos arquivos WAL. O ZIP não tem senha; guarde-o em um local privado. A importação de backup não faz parte deste card.
 
 ---
 

@@ -189,6 +189,20 @@ class MidiaService {
     return total;
   }
 
+  /// Caminhos relativos das mídias que acompanham a cópia do banco.
+  Future<List<String>> listarArquivos() async {
+    final caminhos = <String>[];
+    await for (final item in _base.list(recursive: true)) {
+      if (item is File) {
+        caminhos.add(
+          p.relative(item.path, from: _base.path).replaceAll('\\', '/'),
+        );
+      }
+    }
+    caminhos.sort();
+    return caminhos;
+  }
+
   /// Libere ao encerrar o app (ou no dispose do provider).
   Future<void> dispose() async {
     await _gravador.dispose();

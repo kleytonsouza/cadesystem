@@ -7,6 +7,7 @@ import 'data/repositories/categoria_repository.dart';
 import 'data/repositories/local_repository.dart';
 import 'data/repositories/objeto_repository.dart';
 import 'data/services/cade_database.dart';
+import 'data/services/backup_service.dart';
 import 'data/services/midia_service.dart';
 import 'data/services/permissao_service.dart';
 import 'ui/home/home_view.dart';
@@ -36,6 +37,12 @@ class _CadeAppState extends State<CadeApp> {
       providers: [
         Provider<CadeDatabase>.value(value: widget.banco),
         Provider<MidiaService>.value(value: widget.midia),
+        Provider(
+          create: (context) => BackupService(
+            banco: context.read<CadeDatabase>(),
+            midia: context.read<MidiaService>(),
+          ),
+        ),
         Provider(create: (_) => PermissaoService()),
         Provider(
           create: (context) => CategoriaRepository(banco: context.read()),
