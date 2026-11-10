@@ -63,6 +63,50 @@ class _BuscarViewState extends State<BuscarView> {
                       ),
                       onChanged: viewModel.termoAlterado,
                     ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      key: ValueKey('filtro-local-${viewModel.localSelecionado}'),
+                      initialValue: viewModel.localSelecionado,
+                      decoration: const InputDecoration(labelText: 'Local'),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Todos os locais'),
+                        ),
+                        for (final local in viewModel.locais)
+                          DropdownMenuItem<int?>(
+                            value: local.id,
+                            child: Text(local.nome),
+                          ),
+                      ],
+                      onChanged: viewModel.filtrarPorLocal,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      key: ValueKey('filtro-categoria-${viewModel.categoriaSelecionada}'),
+                      initialValue: viewModel.categoriaSelecionada,
+                      decoration: const InputDecoration(labelText: 'Categoria'),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Todas as categorias'),
+                        ),
+                        for (final categoria in viewModel.categorias)
+                          DropdownMenuItem<int?>(
+                            value: categoria.id,
+                            child: Text(categoria.nome),
+                          ),
+                      ],
+                      onChanged: viewModel.filtrarPorCategoria,
+                    ),
+                    if (viewModel.temFiltro)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: viewModel.limparFiltros,
+                          child: const Text('Limpar filtros'),
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     Expanded(child: _buildConteudo(viewModel)),
                   ],
