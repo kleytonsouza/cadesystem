@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// O teste usa SQLite real em memória e substitui apenas o acesso às mídias.
 class _MidiaDeTeste implements MidiaService {
   @override
+  Future<int> espacoTotalBytes() async => 0;
+  @override
   Future<int> tamanhoDe(String? relativo) async => 0;
   @override
   Future<void> apagar(String? relativo) async {}
@@ -50,6 +52,13 @@ Future<void> _tocarEmSalvar(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('configurações oferece exportação manual de backup', (tester) async {
+    await _abrirApp(tester);
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    expect(find.text('Exportar backup'), findsOneWidget);
+  });
+
   for (final salvar in [false, true]) {
     testWidgets(
       'sair da edicao ${salvar ? "salvando" : "sem salvar"} permite novo cadastro sem sobrescrever',

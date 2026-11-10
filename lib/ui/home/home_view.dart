@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../buscar/buscar_view.dart';
+import '../configuracoes/configuracoes_view.dart';
 import '../registrar/registrar_view.dart';
 
 class HomeView extends StatelessWidget {
@@ -9,11 +10,9 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadê?'),
-      ),
+      appBar: AppBar(title: const Text('Cadê?')),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Center(
             child: ConstrainedBox(
@@ -54,6 +53,19 @@ class HomeView extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const HistoricoView(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _OptionCard(
+                    icon: Icons.settings_outlined,
+                    title: 'Configurações',
+                    subtitle: 'Ver espaço usado e exportar backup.',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ConfiguracoesView(),
                         ),
                       );
                     },
@@ -105,10 +117,7 @@ class _OptionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
