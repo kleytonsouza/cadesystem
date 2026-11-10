@@ -14,8 +14,8 @@ class BuscarViewModel extends BaseViewModel {
     required LocalRepository locais,
     required CategoriaRepository categorias,
     this.atrasoDaBusca = const Duration(milliseconds: 300),
-  })  : _locaisRepo = locais,
-        _categoriasRepo = categorias;
+  }) : _locaisRepo = locais,
+       _categoriasRepo = categorias;
 
   final ObjetoRepository _objetos;
   final LocalRepository _locaisRepo;
@@ -27,6 +27,7 @@ class BuscarViewModel extends BaseViewModel {
   String _termo = '';
   int? _localId;
   int? _categoriaId;
+  bool _somenteAntigos = false;
 
   List<ObjetoDetalhe> _resultados = [];
   List<Local> _locais = [];
@@ -44,7 +45,14 @@ class BuscarViewModel extends BaseViewModel {
   String get termo => _termo;
   int? get localSelecionado => _localId;
   int? get categoriaSelecionada => _categoriaId;
-  List<ObjetoDetalhe> get resultados => List.unmodifiable(_resultados);
+  List<ObjetoDetalhe> get resultados => List.unmodifiable(
+    _somenteAntigos
+        ? _resultados.where((item) => item.objeto.registroAntigo())
+        : _resultados,
+  );
+  bool get somenteAntigos => _somenteAntigos;
+  int get quantidadeAntigos =>
+      _resultados.where((item) => item.objeto.registroAntigo()).length;
   List<Local> get locais => List.unmodifiable(_locais);
   List<Categoria> get categorias => List.unmodifiable(_categorias);
 
@@ -87,6 +95,11 @@ class BuscarViewModel extends BaseViewModel {
     return buscar();
   }
 
+  void alternarAntigos() {
+    _somenteAntigos = !_somenteAntigos;
+    notifyListeners();
+  }
+
   Future<bool> excluirItem(int objetoId) async {
     try {
       await _objetos.excluir(objetoId);
@@ -121,8 +134,10 @@ class BuscarViewModel extends BaseViewModel {
       definirEstado(lista.isEmpty ? EstadoTela.vazio : EstadoTela.sucesso);
     } catch (_) {
       if (minhaConsulta != _consultaAtual) return;
-      definirEstado(EstadoTela.erro,
-          erro: 'Não foi possível buscar agora. Tente novamente.');
+      definirEstado(
+        EstadoTela.erro,
+        erro: 'Não foi possível buscar agora. Tente novamente.',
+      );
     }
   }
 

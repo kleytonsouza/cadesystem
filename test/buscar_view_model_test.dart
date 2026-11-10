@@ -96,4 +96,29 @@ void main() {
       isFalse,
     );
   });
+
+  test('mostra registros antigos e remove aviso após confirmar local', () async {
+    final itens = await objetos.buscar('');
+    final antigo = itens.first.objeto.id;
+    final dataAntiga = DateTime.now()
+        .subtract(const Duration(days: 400))
+        .millisecondsSinceEpoch ~/ 1000;
+    await banco.customStatement(
+      'UPDATE objetos SET confirmado_em = ? WHERE id = ?',
+      [dataAntiga, antigo],
+    );
+
+    await viewModel.iniciar();
+    expect(viewModel.quantidadeAntigos, 1);
+    viewModel.alternarAntigos();
+    expect(viewModel.resultados.single.objeto.id, antigo);
+
+    final local = itens.first.local.nome;
+    await objetos.mover(antigo, local);
+    await viewModel.buscar();
+    expect(viewModel.quantidadeAntigos, 0);
+    expect(viewModel.resultados, isEmpty);
+    viewModel.alternarAntigos();
+    expect(viewModel.resultados, hasLength(2));
+  });
 }
