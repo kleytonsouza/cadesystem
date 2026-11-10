@@ -116,6 +116,56 @@ void main() {
     expect(await File(midia.caminho('audio.m4a')).exists(), isTrue);
   });
 
+  test(
+    'fotos adicionais persistem e a primeira restante vira foto principal',
+    () async {
+      await File(midia.caminho('extra1.jpg')).writeAsBytes([6]);
+      await File(midia.caminho('extra2.jpg')).writeAsBytes([7]);
+      final id = await objetos.registrar(
+        nome: 'Documento',
+        nomeLocal: 'Gaveta',
+        fotoPath: 'foto.jpg',
+        fotosExtras: ['extra1.jpg', 'extra2.jpg'],
+      );
+
+      expect((await objetos.obter(id))!.fotosExtras, [
+        'extra1.jpg',
+        'extra2.jpg',
+      ]);
+      await vm.prepararEdicao(id);
+      await vm.removerFotoDoObjeto();
+      await vm.removerFoto('extra2.jpg');
+      expect(await vm.salvar(), isTrue);
+
+      final salvo = (await objetos.obter(id))!;
+      expect(salvo.objeto.fotoPath, 'extra1.jpg');
+      expect(salvo.fotosExtras, isEmpty);
+      expect(await File(midia.caminho('foto.jpg')).exists(), isFalse);
+      expect(await File(midia.caminho('extra1.jpg')).exists(), isTrue);
+      expect(await File(midia.caminho('extra2.jpg')).exists(), isFalse);
+
+      await objetos.excluir(id);
+      expect(await File(midia.caminho('extra1.jpg')).exists(), isFalse);
+    },
+  );
+
+  test('cancelar remoção de foto adicional preserva vínculo e arquivo', () async {
+    await File(midia.caminho('extra.jpg')).writeAsBytes([6]);
+    final id = await objetos.registrar(
+      nome: 'Documento',
+      nomeLocal: 'Gaveta',
+      fotoPath: 'foto.jpg',
+      fotosExtras: ['extra.jpg'],
+    );
+
+    await vm.prepararEdicao(id);
+    await vm.removerFoto('extra.jpg');
+    await vm.limparFormulario();
+
+    expect((await objetos.obter(id))!.fotosExtras, ['extra.jpg']);
+    expect(await File(midia.caminho('extra.jpg')).exists(), isTrue);
+  });
+
   test('substituicao limpa arquivo antigo somente apos salvar', () async {
     final id = await cadastrar();
     await File(midia.caminho('nova.jpg')).writeAsBytes([9]);

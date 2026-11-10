@@ -104,6 +104,40 @@ class _DetalheViewState extends State<DetalheView> {
             ),
             const SizedBox(height: 20),
           ],
+          if (detalhe.fotosExtras.isNotEmpty) ...[
+            const Text('Outras fotos'),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 110,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: detalhe.fotosExtras.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, indice) {
+                  final foto = File(midia.caminho(detalhe.fotosExtras[indice]));
+                  return InkWell(
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (context) =>
+                          Dialog(child: Image.file(foto, fit: BoxFit.contain)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        foto,
+                        width: 110,
+                        height: 110,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const Icon(Icons.broken_image_outlined),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

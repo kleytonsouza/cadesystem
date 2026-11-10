@@ -6,11 +6,13 @@ class ObjetoDetalhe {
   final Objeto objeto;
   final Local local;
   final Categoria? categoria;
+  final List<String> fotosExtras;
 
   const ObjetoDetalhe({
     required this.objeto,
     required this.local,
     this.categoria,
+    this.fotosExtras = const [],
   });
 
   String get resumo => '${objeto.nome} — ${local.nome}';

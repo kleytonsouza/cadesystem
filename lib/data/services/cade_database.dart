@@ -66,6 +66,17 @@ class Objetos extends Table {
   DateTimeColumn get excluidoEm => dateTime().nullable()();
 }
 
+/// Fotos adicionais; a foto principal continua em objetos.fotoPath.
+@DataClassName('FotoObjetoRow')
+@TableIndex(name: 'idx_fotos_objeto', columns: {#objetoId})
+class FotosObjeto extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get objetoId =>
+      integer().references(Objetos, #id, onDelete: KeyAction.cascade)();
+  TextColumn get caminho => text()();
+  IntColumn get ordem => integer()();
+}
+
 /// US09: histórico de mudanças de local.
 @DataClassName('HistoricoLocalRow')
 class HistoricoLocal extends Table {
@@ -96,13 +107,15 @@ class ObjetoComLocal {
 // BANCO
 // ===================================================================
 
-@DriftDatabase(tables: [Categorias, Locais, Objetos, HistoricoLocal])
+@DriftDatabase(
+  tables: [Categorias, Locais, Objetos, HistoricoLocal, FotosObjeto],
+)
 class CadeDatabase extends _$CadeDatabase {
   CadeDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'cade'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -113,6 +126,9 @@ class CadeDatabase extends _$CadeDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.addColumn(objetos, objetos.excluidoEm);
+      }
+      if (from < 3) {
+        await m.createTable(fotosObjeto);
       }
     },
     beforeOpen: (details) async {
@@ -206,6 +222,7 @@ class CadeDatabase extends _$CadeDatabase {
     String? descricao,
     int? categoriaId,
     int tamanhoBytes = 0,
+    List<String> fotosExtras = const [],
   }) {
     return transaction(() async {
       final localId = await obterOuCriarLocal(
@@ -223,6 +240,15 @@ class CadeDatabase extends _$CadeDatabase {
           tamanhoBytes: Value(tamanhoBytes),
         ),
       );
+      for (var i = 0; i < fotosExtras.length; i++) {
+        await into(fotosObjeto).insert(
+          FotosObjetoCompanion.insert(
+            objetoId: criado.id,
+            caminho: fotosExtras[i],
+            ordem: i,
+          ),
+        );
+      }
       return criado.id;
     });
   }
@@ -256,6 +282,15 @@ class CadeDatabase extends _$CadeDatabase {
     final linha = await consulta.getSingleOrNull();
     if (linha == null) return null;
     return ObjetoComLocal(linha.readTable(objetos), linha.readTable(locais));
+  }
+
+  Future<List<String>> listarFotosExtras(int objetoId) async {
+    final linhas =
+        await (select(fotosObjeto)
+              ..where((f) => f.objetoId.equals(objetoId))
+              ..orderBy([(f) => OrderingTerm.asc(f.ordem)]))
+            .get();
+    return linhas.map((f) => f.caminho).toList();
   }
 
   /// US06: o que tem em determinado local?
@@ -330,6 +365,7 @@ class CadeDatabase extends _$CadeDatabase {
     String? descricao,
     int? categoriaId,
     int tamanhoBytes = 0,
+    List<String>? fotosExtras,
   }) {
     return transaction(() async {
       final atual =
@@ -357,6 +393,21 @@ class CadeDatabase extends _$CadeDatabase {
           confirmadoEm: Value(agora),
         ),
       );
+
+      if (fotosExtras != null) {
+        await (delete(
+          fotosObjeto,
+        )..where((f) => f.objetoId.equals(objetoId))).go();
+        for (var i = 0; i < fotosExtras.length; i++) {
+          await into(fotosObjeto).insert(
+            FotosObjetoCompanion.insert(
+              objetoId: objetoId,
+              caminho: fotosExtras[i],
+              ordem: i,
+            ),
+          );
+        }
+      }
 
       if (localMudou) {
         await into(historicoLocal).insert(

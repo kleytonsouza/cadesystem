@@ -136,7 +136,7 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
     if (!mounted || continuar != true) return;
     setState(() => _fotografando = true);
     try {
-      await viewModel.tirarFotoDoObjeto();
+      await viewModel.adicionarFotoDoObjeto();
     } finally {
       if (mounted) setState(() => _fotografando = false);
     }
@@ -172,7 +172,6 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
     final viewModel = context.watch<RegistrarViewModel>();
     final ocupado =
         _carregando || viewModel.salvando || _fotografando || _limpando;
-    final foto = viewModel.caminhoFotoObjeto;
     final aviso = viewModel.aviso;
 
     return PopScope(
@@ -274,13 +273,13 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Text('Foto do objeto (opcional)'),
+                      const Text('Fotos do objeto (opcionais)'),
                       const SizedBox(height: 8),
-                      if (foto != null) ...[
+                      for (final caminho in viewModel.fotosObjeto) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.file(
-                            File(foto),
+                            File(context.read<MidiaService>().caminho(caminho)),
                             height: 180,
                             fit: BoxFit.cover,
                             semanticLabel: 'Foto do objeto',
@@ -293,7 +292,7 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
                         TextButton(
                           onPressed: ocupado
                               ? null
-                              : viewModel.removerFotoDoObjeto,
+                              : () => viewModel.removerFoto(caminho),
                           child: const Text('Remover foto'),
                         ),
                       ],
@@ -301,11 +300,7 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
                         onPressed: ocupado ? null : _tirarFoto,
                         icon: const Icon(Icons.camera_alt_outlined),
                         label: Text(
-                          _fotografando
-                              ? 'Abrindo câmera…'
-                              : foto == null
-                              ? 'Adicionar foto'
-                              : 'Tirar outra foto',
+                          _fotografando ? 'Abrindo câmera…' : 'Adicionar foto',
                         ),
                       ),
                       const SizedBox(height: 16),

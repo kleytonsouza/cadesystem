@@ -1599,6 +1599,307 @@ class HistoricoLocalCompanion extends UpdateCompanion<HistoricoLocalRow> {
   }
 }
 
+class $FotosObjetoTable extends FotosObjeto
+    with TableInfo<$FotosObjetoTable, FotoObjetoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FotosObjetoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _objetoIdMeta = const VerificationMeta(
+    'objetoId',
+  );
+  @override
+  late final GeneratedColumn<int> objetoId = GeneratedColumn<int>(
+    'objeto_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES objetos (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _caminhoMeta = const VerificationMeta(
+    'caminho',
+  );
+  @override
+  late final GeneratedColumn<String> caminho = GeneratedColumn<String>(
+    'caminho',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ordemMeta = const VerificationMeta('ordem');
+  @override
+  late final GeneratedColumn<int> ordem = GeneratedColumn<int>(
+    'ordem',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, objetoId, caminho, ordem];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fotos_objeto';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FotoObjetoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('objeto_id')) {
+      context.handle(
+        _objetoIdMeta,
+        objetoId.isAcceptableOrUnknown(data['objeto_id']!, _objetoIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_objetoIdMeta);
+    }
+    if (data.containsKey('caminho')) {
+      context.handle(
+        _caminhoMeta,
+        caminho.isAcceptableOrUnknown(data['caminho']!, _caminhoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_caminhoMeta);
+    }
+    if (data.containsKey('ordem')) {
+      context.handle(
+        _ordemMeta,
+        ordem.isAcceptableOrUnknown(data['ordem']!, _ordemMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ordemMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FotoObjetoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FotoObjetoRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      objetoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}objeto_id'],
+      )!,
+      caminho: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}caminho'],
+      )!,
+      ordem: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ordem'],
+      )!,
+    );
+  }
+
+  @override
+  $FotosObjetoTable createAlias(String alias) {
+    return $FotosObjetoTable(attachedDatabase, alias);
+  }
+}
+
+class FotoObjetoRow extends DataClass implements Insertable<FotoObjetoRow> {
+  final int id;
+  final int objetoId;
+  final String caminho;
+  final int ordem;
+  const FotoObjetoRow({
+    required this.id,
+    required this.objetoId,
+    required this.caminho,
+    required this.ordem,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['objeto_id'] = Variable<int>(objetoId);
+    map['caminho'] = Variable<String>(caminho);
+    map['ordem'] = Variable<int>(ordem);
+    return map;
+  }
+
+  FotosObjetoCompanion toCompanion(bool nullToAbsent) {
+    return FotosObjetoCompanion(
+      id: Value(id),
+      objetoId: Value(objetoId),
+      caminho: Value(caminho),
+      ordem: Value(ordem),
+    );
+  }
+
+  factory FotoObjetoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FotoObjetoRow(
+      id: serializer.fromJson<int>(json['id']),
+      objetoId: serializer.fromJson<int>(json['objetoId']),
+      caminho: serializer.fromJson<String>(json['caminho']),
+      ordem: serializer.fromJson<int>(json['ordem']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'objetoId': serializer.toJson<int>(objetoId),
+      'caminho': serializer.toJson<String>(caminho),
+      'ordem': serializer.toJson<int>(ordem),
+    };
+  }
+
+  FotoObjetoRow copyWith({
+    int? id,
+    int? objetoId,
+    String? caminho,
+    int? ordem,
+  }) => FotoObjetoRow(
+    id: id ?? this.id,
+    objetoId: objetoId ?? this.objetoId,
+    caminho: caminho ?? this.caminho,
+    ordem: ordem ?? this.ordem,
+  );
+  FotoObjetoRow copyWithCompanion(FotosObjetoCompanion data) {
+    return FotoObjetoRow(
+      id: data.id.present ? data.id.value : this.id,
+      objetoId: data.objetoId.present ? data.objetoId.value : this.objetoId,
+      caminho: data.caminho.present ? data.caminho.value : this.caminho,
+      ordem: data.ordem.present ? data.ordem.value : this.ordem,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FotoObjetoRow(')
+          ..write('id: $id, ')
+          ..write('objetoId: $objetoId, ')
+          ..write('caminho: $caminho, ')
+          ..write('ordem: $ordem')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, objetoId, caminho, ordem);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FotoObjetoRow &&
+          other.id == this.id &&
+          other.objetoId == this.objetoId &&
+          other.caminho == this.caminho &&
+          other.ordem == this.ordem);
+}
+
+class FotosObjetoCompanion extends UpdateCompanion<FotoObjetoRow> {
+  final Value<int> id;
+  final Value<int> objetoId;
+  final Value<String> caminho;
+  final Value<int> ordem;
+  const FotosObjetoCompanion({
+    this.id = const Value.absent(),
+    this.objetoId = const Value.absent(),
+    this.caminho = const Value.absent(),
+    this.ordem = const Value.absent(),
+  });
+  FotosObjetoCompanion.insert({
+    this.id = const Value.absent(),
+    required int objetoId,
+    required String caminho,
+    required int ordem,
+  }) : objetoId = Value(objetoId),
+       caminho = Value(caminho),
+       ordem = Value(ordem);
+  static Insertable<FotoObjetoRow> custom({
+    Expression<int>? id,
+    Expression<int>? objetoId,
+    Expression<String>? caminho,
+    Expression<int>? ordem,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (objetoId != null) 'objeto_id': objetoId,
+      if (caminho != null) 'caminho': caminho,
+      if (ordem != null) 'ordem': ordem,
+    });
+  }
+
+  FotosObjetoCompanion copyWith({
+    Value<int>? id,
+    Value<int>? objetoId,
+    Value<String>? caminho,
+    Value<int>? ordem,
+  }) {
+    return FotosObjetoCompanion(
+      id: id ?? this.id,
+      objetoId: objetoId ?? this.objetoId,
+      caminho: caminho ?? this.caminho,
+      ordem: ordem ?? this.ordem,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (objetoId.present) {
+      map['objeto_id'] = Variable<int>(objetoId.value);
+    }
+    if (caminho.present) {
+      map['caminho'] = Variable<String>(caminho.value);
+    }
+    if (ordem.present) {
+      map['ordem'] = Variable<int>(ordem.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FotosObjetoCompanion(')
+          ..write('id: $id, ')
+          ..write('objetoId: $objetoId, ')
+          ..write('caminho: $caminho, ')
+          ..write('ordem: $ordem')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CadeDatabase extends GeneratedDatabase {
   _$CadeDatabase(QueryExecutor e) : super(e);
   $CadeDatabaseManager get managers => $CadeDatabaseManager(this);
@@ -1606,6 +1907,7 @@ abstract class _$CadeDatabase extends GeneratedDatabase {
   late final $LocaisTable locais = $LocaisTable(this);
   late final $ObjetosTable objetos = $ObjetosTable(this);
   late final $HistoricoLocalTable historicoLocal = $HistoricoLocalTable(this);
+  late final $FotosObjetoTable fotosObjeto = $FotosObjetoTable(this);
   late final Index idxObjetosNome = Index(
     'idx_objetos_nome',
     'CREATE INDEX idx_objetos_nome ON objetos (nome)',
@@ -1618,6 +1920,10 @@ abstract class _$CadeDatabase extends GeneratedDatabase {
     'idx_objetos_categoria',
     'CREATE INDEX idx_objetos_categoria ON objetos (categoria_id)',
   );
+  late final Index idxFotosObjeto = Index(
+    'idx_fotos_objeto',
+    'CREATE INDEX idx_fotos_objeto ON fotos_objeto (objeto_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1627,9 +1933,11 @@ abstract class _$CadeDatabase extends GeneratedDatabase {
     locais,
     objetos,
     historicoLocal,
+    fotosObjeto,
     idxObjetosNome,
     idxObjetosLocal,
     idxObjetosCategoria,
+    idxFotosObjeto,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1653,6 +1961,13 @@ abstract class _$CadeDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('historico_local', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'objetos',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('fotos_objeto', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2258,6 +2573,24 @@ final class $$ObjetosTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$FotosObjetoTable, List<FotoObjetoRow>>
+  _fotosObjetoRefsTable(_$CadeDatabase db) => MultiTypedResultKey.fromTable(
+    db.fotosObjeto,
+    aliasName: 'objetos__id__fotos_objeto__objeto_id',
+  );
+
+  $$FotosObjetoTableProcessedTableManager get fotosObjetoRefs {
+    final manager = $$FotosObjetoTableTableManager(
+      $_db,
+      $_db.fotosObjeto,
+    ).filter((f) => f.objetoId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_fotosObjetoRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ObjetosTableFilterComposer
@@ -2376,6 +2709,31 @@ class $$ObjetosTableFilterComposer
           }) => $$HistoricoLocalTableFilterComposer(
             $db: $db,
             $table: $db.historicoLocal,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> fotosObjetoRefs(
+    Expression<bool> Function($$FotosObjetoTableFilterComposer f) f,
+  ) {
+    final $$FotosObjetoTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fotosObjeto,
+      getReferencedColumn: (t) => t.objetoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FotosObjetoTableFilterComposer(
+            $db: $db,
+            $table: $db.fotosObjeto,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2601,6 +2959,31 @@ class $$ObjetosTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> fotosObjetoRefs<T extends Object>(
+    Expression<T> Function($$FotosObjetoTableAnnotationComposer a) f,
+  ) {
+    final $$FotosObjetoTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fotosObjeto,
+      getReferencedColumn: (t) => t.objetoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FotosObjetoTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fotosObjeto,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ObjetosTableTableManager
@@ -2620,6 +3003,7 @@ class $$ObjetosTableTableManager
             bool localId,
             bool categoriaId,
             bool historicoLocalRefs,
+            bool fotosObjetoRefs,
           })
         > {
   $$ObjetosTableTableManager(_$CadeDatabase db, $ObjetosTable table)
@@ -2698,11 +3082,13 @@ class $$ObjetosTableTableManager
                 localId = false,
                 categoriaId = false,
                 historicoLocalRefs = false,
+                fotosObjetoRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (historicoLocalRefs) db.historicoLocal,
+                    if (fotosObjetoRefs) db.fotosObjeto,
                   ],
                   addJoins:
                       <
@@ -2767,6 +3153,26 @@ class $$ObjetosTableTableManager
                           referencedColumn: 'objeto_id',
                           typedResults: items,
                         ),
+                      if (fotosObjetoRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ObjetoRow,
+                          $ObjetosTable,
+                          FotoObjetoRow,
+                          $FotosObjetoTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ObjetosTableReferences
+                              ._fotosObjetoRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ObjetosTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).fotosObjetoRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'objeto_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2791,6 +3197,7 @@ typedef $$ObjetosTableProcessedTableManager =
         bool localId,
         bool categoriaId,
         bool historicoLocalRefs,
+        bool fotosObjetoRefs,
       })
     >;
 typedef $$HistoricoLocalTableCreateCompanionBuilder =
@@ -3292,6 +3699,296 @@ typedef $$HistoricoLocalTableProcessedTableManager =
         bool localNovoId,
       })
     >;
+typedef $$FotosObjetoTableCreateCompanionBuilder =
+    FotosObjetoCompanion Function({
+      Value<int> id,
+      required int objetoId,
+      required String caminho,
+      required int ordem,
+    });
+typedef $$FotosObjetoTableUpdateCompanionBuilder =
+    FotosObjetoCompanion Function({
+      Value<int> id,
+      Value<int> objetoId,
+      Value<String> caminho,
+      Value<int> ordem,
+    });
+
+final class $$FotosObjetoTableReferences
+    extends BaseReferences<_$CadeDatabase, $FotosObjetoTable, FotoObjetoRow> {
+  $$FotosObjetoTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ObjetosTable _objetoIdTable(_$CadeDatabase db) =>
+      db.objetos.createAlias('fotos_objeto__objeto_id__objetos__id');
+
+  $$ObjetosTableProcessedTableManager get objetoId {
+    final $_column = $_itemColumn<int>('objeto_id')!;
+
+    final manager = $$ObjetosTableTableManager(
+      $_db,
+      $_db.objetos,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_objetoIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FotosObjetoTableFilterComposer
+    extends Composer<_$CadeDatabase, $FotosObjetoTable> {
+  $$FotosObjetoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get caminho => $composableBuilder(
+    column: $table.caminho,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ordem => $composableBuilder(
+    column: $table.ordem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ObjetosTableFilterComposer get objetoId {
+    final $$ObjetosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.objetoId,
+      referencedTable: $db.objetos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObjetosTableFilterComposer(
+            $db: $db,
+            $table: $db.objetos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FotosObjetoTableOrderingComposer
+    extends Composer<_$CadeDatabase, $FotosObjetoTable> {
+  $$FotosObjetoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get caminho => $composableBuilder(
+    column: $table.caminho,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ordem => $composableBuilder(
+    column: $table.ordem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ObjetosTableOrderingComposer get objetoId {
+    final $$ObjetosTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.objetoId,
+      referencedTable: $db.objetos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObjetosTableOrderingComposer(
+            $db: $db,
+            $table: $db.objetos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FotosObjetoTableAnnotationComposer
+    extends Composer<_$CadeDatabase, $FotosObjetoTable> {
+  $$FotosObjetoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get caminho =>
+      $composableBuilder(column: $table.caminho, builder: (column) => column);
+
+  GeneratedColumn<int> get ordem =>
+      $composableBuilder(column: $table.ordem, builder: (column) => column);
+
+  $$ObjetosTableAnnotationComposer get objetoId {
+    final $$ObjetosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.objetoId,
+      referencedTable: $db.objetos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObjetosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.objetos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FotosObjetoTableTableManager
+    extends
+        RootTableManager<
+          _$CadeDatabase,
+          $FotosObjetoTable,
+          FotoObjetoRow,
+          $$FotosObjetoTableFilterComposer,
+          $$FotosObjetoTableOrderingComposer,
+          $$FotosObjetoTableAnnotationComposer,
+          $$FotosObjetoTableCreateCompanionBuilder,
+          $$FotosObjetoTableUpdateCompanionBuilder,
+          (FotoObjetoRow, $$FotosObjetoTableReferences),
+          FotoObjetoRow,
+          PrefetchHooks Function({bool objetoId})
+        > {
+  $$FotosObjetoTableTableManager(_$CadeDatabase db, $FotosObjetoTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FotosObjetoTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FotosObjetoTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FotosObjetoTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> objetoId = const Value.absent(),
+                Value<String> caminho = const Value.absent(),
+                Value<int> ordem = const Value.absent(),
+              }) => FotosObjetoCompanion(
+                id: id,
+                objetoId: objetoId,
+                caminho: caminho,
+                ordem: ordem,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int objetoId,
+                required String caminho,
+                required int ordem,
+              }) => FotosObjetoCompanion.insert(
+                id: id,
+                objetoId: objetoId,
+                caminho: caminho,
+                ordem: ordem,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FotosObjetoTable, FotoObjetoRow>(table),
+                  $$FotosObjetoTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({objetoId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (objetoId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.objetoId,
+                        referencedTable: $$FotosObjetoTableReferences
+                            ._objetoIdTable(db),
+                        referencedColumn: $$FotosObjetoTableReferences
+                            ._objetoIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FotosObjetoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CadeDatabase,
+      $FotosObjetoTable,
+      FotoObjetoRow,
+      $$FotosObjetoTableFilterComposer,
+      $$FotosObjetoTableOrderingComposer,
+      $$FotosObjetoTableAnnotationComposer,
+      $$FotosObjetoTableCreateCompanionBuilder,
+      $$FotosObjetoTableUpdateCompanionBuilder,
+      (FotoObjetoRow, $$FotosObjetoTableReferences),
+      FotoObjetoRow,
+      PrefetchHooks Function({bool objetoId})
+    >;
 
 class $CadeDatabaseManager {
   final _$CadeDatabase _db;
@@ -3304,4 +4001,6 @@ class $CadeDatabaseManager {
       $$ObjetosTableTableManager(_db, _db.objetos);
   $$HistoricoLocalTableTableManager get historicoLocal =>
       $$HistoricoLocalTableTableManager(_db, _db.historicoLocal);
+  $$FotosObjetoTableTableManager get fotosObjeto =>
+      $$FotosObjetoTableTableManager(_db, _db.fotosObjeto);
 }
