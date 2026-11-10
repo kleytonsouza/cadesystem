@@ -141,7 +141,8 @@ Todos estendem `BaseViewModel`, que guarda o estado da tela (`inicial`, `carrega
 
 Pontos importantes:
 - Os filtros por local e categoria são aplicados em memória, no repository. Se a lista crescer, mova-os para uma consulta no `CadeDatabase`.
-- `ObjetoRepository.excluir` apaga a foto e o áudio do objeto, mas não a foto do local, porque outros objetos podem usá-la.
+- `ObjetoRepository.excluir` apaga as fotos e o áudio do objeto, mas não a foto do local, porque outros objetos podem usá-la.
+- Registros sem confirmação do local há mais de 330 dias aparecem como "Para conferir" no Histórico. O botão "Confirmar local" no detalhe atualiza essa data.
 - Se `registrar` falhar, as mídias não são apagadas: o ViewModel ainda as tem e o usuário pode tentar de novo.
 
 ---
