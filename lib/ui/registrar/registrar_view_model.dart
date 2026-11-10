@@ -64,6 +64,7 @@ class RegistrarViewModel extends BaseViewModel {
   String? _fotoObjetoOriginal;
   String? _audioOriginal;
   bool _removerFotoOriginal = false;
+  bool _removerAudioOriginal = false;
 
   bool _gravando = false;
   bool _salvando = false;
@@ -87,10 +88,14 @@ class RegistrarViewModel extends BaseViewModel {
       _fotoPath == null ? null : _midia.caminho(_fotoPath!);
   MidiaSalva? get fotoLocal => _fotoLocal;
   MidiaSalva? get audio => _audio;
+  String? get caminhoAudio =>
+      _audio?.caminhoRelativo ??
+      (_removerAudioOriginal ? null : _audioOriginal);
   bool get gravando => _gravando;
   bool get salvando => _salvando;
   AvisoPermissao? get aviso => _aviso;
   String get motivoCamera => TipoPermissao.camera.motivo;
+  String get motivoMicrofone => TipoPermissao.microfone.motivo;
   List<Categoria> get categorias => List.unmodifiable(_categorias);
 
   /// US03: locais já usados que combinam com o que o usuário digitou.
@@ -156,6 +161,7 @@ class RegistrarViewModel extends BaseViewModel {
         _audio = null;
         _fotoObjetoOriginal = detalhe.objeto.fotoPath;
         _audioOriginal = detalhe.objeto.audioPath;
+        _removerAudioOriginal = false;
       }
       definirEstado(EstadoTela.sucesso);
     } catch (_) {
@@ -270,6 +276,7 @@ class RegistrarViewModel extends BaseViewModel {
     if (salvo != null) {
       await _midia.apagar(_audio?.caminhoRelativo);
       _audio = salvo;
+      _removerAudioOriginal = false;
     }
     notifyListeners();
   }
@@ -277,6 +284,7 @@ class RegistrarViewModel extends BaseViewModel {
   Future<void> removerAudio() async {
     await _midia.apagar(_audio?.caminhoRelativo);
     _audio = null;
+    _removerAudioOriginal = true;
     notifyListeners();
   }
 
@@ -307,7 +315,7 @@ class RegistrarViewModel extends BaseViewModel {
       }
 
       final fotoPath = _fotoPath;
-      final audioPath = _audio?.caminhoRelativo ?? _audioOriginal;
+      final audioPath = caminhoAudio;
       final tamanho =
           (_fotoObjeto?.tamanhoBytes ?? await _midia.tamanhoDe(fotoPath)) +
           (_fotoLocal?.tamanhoBytes ?? 0) +
@@ -343,6 +351,7 @@ class RegistrarViewModel extends BaseViewModel {
       _fotoObjetoOriginal = fotoPath;
       _audioOriginal = audioPath;
       _removerFotoOriginal = false;
+      _removerAudioOriginal = false;
       _fotoObjeto = null;
       _fotoLocal = null;
       _audio = null;
@@ -368,6 +377,7 @@ class RegistrarViewModel extends BaseViewModel {
     _fotoObjetoOriginal = null;
     _audioOriginal = null;
     _removerFotoOriginal = false;
+    _removerAudioOriginal = false;
     _nome = '';
     _nomeLocal = '';
     _descricao = '';

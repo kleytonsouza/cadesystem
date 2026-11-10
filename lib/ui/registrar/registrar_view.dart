@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'registrar_view_model.dart';
+import '../core/audio_playback_button.dart';
 import '../core/base_view_model.dart';
+import '../../data/services/midia_service.dart';
 
 class RegistrarView extends StatelessWidget {
   const RegistrarView({this.objetoId, this.focarLocal = false, super.key});
@@ -138,6 +140,31 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
     } finally {
       if (mounted) setState(() => _fotografando = false);
     }
+  }
+
+  Future<void> _iniciarGravacao() async {
+    final viewModel = context.read<RegistrarViewModel>();
+    final continuar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gravar áudio'),
+        content: Text(
+          '${viewModel.motivoMicrofone}\n\n'
+          'Você também pode escrever o local sem usar o microfone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Agora não'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usar microfone'),
+          ),
+        ],
+      ),
+    );
+    if (mounted && continuar == true) await viewModel.iniciarGravacao();
   }
 
   @override
@@ -281,6 +308,39 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
                               : 'Tirar outra foto',
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      const Text('Áudio do objeto (opcional)'),
+                      const SizedBox(height: 8),
+                      if (viewModel.caminhoAudio != null) ...[
+                        AudioPlaybackButton(
+                          caminho: context.read<MidiaService>().caminho(
+                            viewModel.caminhoAudio!,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: ocupado || viewModel.gravando
+                              ? null
+                              : viewModel.removerAudio,
+                          child: const Text('Remover áudio'),
+                        ),
+                      ],
+                      OutlinedButton.icon(
+                        onPressed: ocupado
+                            ? null
+                            : viewModel.gravando
+                            ? viewModel.pararGravacao
+                            : _iniciarGravacao,
+                        icon: Icon(
+                          viewModel.gravando
+                              ? Icons.stop_circle_outlined
+                              : Icons.mic_none_outlined,
+                        ),
+                        label: Text(
+                          viewModel.gravando
+                              ? 'Parar gravação'
+                              : 'Gravar áudio',
+                        ),
+                      ),
                       if (aviso != null) ...[
                         const SizedBox(height: 8),
                         Text(aviso.mensagem),
@@ -308,7 +368,8 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
                       ],
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed: ocupado || !_registroCarregado
+                        onPressed:
+                            ocupado || viewModel.gravando || !_registroCarregado
                             ? null
                             : _salvar,
                         icon: const Icon(Icons.save_outlined),
