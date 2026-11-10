@@ -235,6 +235,25 @@ void main() {
     expect(find.text('Novo objeto'), findsOneWidget);
   });
 
+  testWidgets('explica o microfone antes da solicitação e permite desistir', (
+    tester,
+  ) async {
+    await _abrirApp(tester);
+    await _irParaCadastro(tester);
+    await tester.ensureVisible(find.text('Gravar áudio'));
+    await tester.tap(find.text('Gravar áudio'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Usar microfone'), findsOneWidget);
+    expect(
+      find.textContaining('O áudio fica só no seu aparelho.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Agora não'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+
   testWidgets(
     'cadastro continua funcional em tela estreita com texto ampliado',
     (tester) async {

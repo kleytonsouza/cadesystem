@@ -75,4 +75,21 @@ void main() {
     expect(viewModel.salvando, isFalse);
     expect(viewModel.mensagemErro, isNotNull);
   });
+
+  test('remover áudio antigo e salvar elimina o vínculo do registro', () async {
+    final id = await banco.registrarObjeto(
+      nome: 'Documento',
+      nomeLocal: 'Gaveta',
+      audioPath: 'audios/antigo.m4a',
+    );
+
+    await viewModel.iniciar(objetoId: id);
+    expect(viewModel.caminhoAudio, 'audios/antigo.m4a');
+    await viewModel.removerAudio();
+    expect(viewModel.caminhoAudio, isNull);
+    expect(await viewModel.salvar(), isTrue);
+
+    final salvo = await banco.obterObjeto(id);
+    expect(salvo!.objeto.audioPath, isNull);
+  });
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/objeto_repository.dart';
 import '../../data/services/midia_service.dart';
+import '../core/audio_playback_button.dart';
 import '../core/base_view_model.dart';
 import 'detalhe_view_model.dart';
 import '../registrar/registrar_view.dart';
@@ -134,6 +135,12 @@ class _DetalheViewState extends State<DetalheView> {
                   if (detalhe.objeto.descricao != null &&
                       detalhe.objeto.descricao!.trim().isNotEmpty)
                     Text(detalhe.objeto.descricao!),
+                  if (detalhe.objeto.audioPath != null) ...[
+                    const SizedBox(height: 12),
+                    AudioPlaybackButton(
+                      caminho: midia.caminho(detalhe.objeto.audioPath!),
+                    ),
+                  ],
                   if (viewModel.registroAntigo) ...[
                     const SizedBox(height: 12),
                     Container(
