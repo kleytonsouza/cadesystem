@@ -4,6 +4,8 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Usamos a câmera para fotografar o objeto. A foto fica só no seu aparelho.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Usamos a foto escolhida para sugerir um objeto e completar o registro no seu aparelho.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Usamos o microfone para gravar onde você guardou o objeto. O áudio fica só no seu aparelho.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

@@ -9,10 +9,18 @@ import '../core/base_view_model.dart';
 import '../../data/services/midia_service.dart';
 
 class RegistrarView extends StatelessWidget {
-  const RegistrarView({this.objetoId, this.focarLocal = false, super.key});
+  const RegistrarView({
+    this.objetoId,
+    this.focarLocal = false,
+    this.nomeInicial,
+    this.fotoInicial,
+    super.key,
+  });
 
   final int? objetoId;
   final bool focarLocal;
+  final String? nomeInicial;
+  final MidiaSalva? fotoInicial;
 
   @override
   Widget build(BuildContext context) {
@@ -24,16 +32,28 @@ class RegistrarView extends StatelessWidget {
         midia: context.read(),
         permissoes: context.read(),
       ),
-      child: _RegistrarFormulario(objetoId: objetoId, focarLocal: focarLocal),
+      child: _RegistrarFormulario(
+        objetoId: objetoId,
+        focarLocal: focarLocal,
+        nomeInicial: nomeInicial,
+        fotoInicial: fotoInicial,
+      ),
     );
   }
 }
 
 class _RegistrarFormulario extends StatefulWidget {
-  const _RegistrarFormulario({this.objetoId, required this.focarLocal});
+  const _RegistrarFormulario({
+    this.objetoId,
+    required this.focarLocal,
+    this.nomeInicial,
+    this.fotoInicial,
+  });
 
   final int? objetoId;
   final bool focarLocal;
+  final String? nomeInicial;
+  final MidiaSalva? fotoInicial;
 
   @override
   State<_RegistrarFormulario> createState() => _RegistrarViewState();
@@ -55,7 +75,11 @@ class _RegistrarViewState extends State<_RegistrarFormulario> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final viewModel = context.read<RegistrarViewModel>();
-      await viewModel.iniciar(objetoId: widget.objetoId);
+      await viewModel.iniciar(
+        objetoId: widget.objetoId,
+        nomeInicial: widget.nomeInicial,
+        fotoInicial: widget.fotoInicial,
+      );
       if (!mounted) return;
       _nome.text = viewModel.nome;
       _local.text = viewModel.nomeLocal;

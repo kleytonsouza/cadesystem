@@ -92,4 +92,24 @@ void main() {
     final salvo = await banco.obterObjeto(id);
     expect(salvo!.objeto.audioPath, isNull);
   });
+
+  test(
+    'sugestão de inventário preenche nome e foto sem dispensar local',
+    () async {
+      const foto = MidiaSalva(
+        caminhoRelativo: 'fotos/inventario.jpg',
+        tamanhoBytes: 3,
+      );
+      await viewModel.iniciar(nomeInicial: '  Documento  ', fotoInicial: foto);
+      expect(viewModel.nome, 'Documento');
+      expect(viewModel.fotosObjeto, ['fotos/inventario.jpg']);
+      expect(viewModel.podeSalvar, isFalse);
+
+      viewModel.nomeLocalAlterado('Gaveta');
+      expect(await viewModel.salvar(), isTrue);
+    final registros = await banco.buscarObjetos('Documento');
+    expect(registros.single.objeto.nome, 'Documento');
+    expect(registros.single.objeto.fotoPath, 'fotos/inventario.jpg');
+    },
+  );
 }

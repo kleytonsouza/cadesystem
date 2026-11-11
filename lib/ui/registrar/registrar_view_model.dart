@@ -143,8 +143,16 @@ class RegistrarViewModel extends BaseViewModel {
   // Carregamento
   // ---------------------------------------------------------------
 
-  Future<void> iniciar({int? objetoId}) async {
+  Future<void> iniciar({
+    int? objetoId,
+    String? nomeInicial,
+    MidiaSalva? fotoInicial,
+  }) async {
     await limparFormulario();
+    if (objetoId == null) {
+      _nome = nomeInicial?.trim() ?? '';
+      _fotoObjeto = fotoInicial;
+    }
     definirEstado(EstadoTela.carregando);
     try {
       _locais = await _locaisRepo.listar();

@@ -25,6 +25,7 @@ Baseadas nas entrevistas com Claites, José e Ricardo.
 ## Funcionalidades
 
 - **Registrar:** fotos do objeto, nome curto, local (texto e foto, reaproveitando locais já usados) e áudio.
+- **Inventário por foto:** sugere nomes a partir de uma imagem; o usuário confere o nome e informa onde guardou antes de salvar.
 - **Encontrar:** busca por texto com foto na primeira tela, filtro por local ou categoria.
 - **Consultar:** detalhe do objeto com foto do item, foto do local, nome, data do registro e áudio.
 - **Manter:** mudar o local, excluir objeto ou local e aviso de registro antigo.
@@ -45,6 +46,7 @@ Baseadas nas entrevistas com Claites, José e Ricardo.
 | Fotos | `image_picker` (câmera, galeria e compressão) |
 | Áudio | `record` (gravação em AAC de baixa taxa) |
 | Permissões | `permission_handler` |
+| Sugestões por foto | ML Kit Image Labeling no aparelho (`google_mlkit_image_labeling`) |
 
 ## Arquitetura (MVVM)
 
