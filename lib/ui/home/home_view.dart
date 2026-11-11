@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../buscar/buscar_view.dart';
 import '../configuracoes/configuracoes_view.dart';
 import '../registrar/registrar_view.dart';
+import '../inventario/inventario_view.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -40,6 +41,19 @@ class HomeView extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const RegistrarView(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _OptionCard(
+                    icon: Icons.image_search_outlined,
+                    title: 'Inventário por foto',
+                    subtitle: 'Veja sugestões de objetos em uma foto.',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const InventarioView(),
                         ),
                       );
                     },

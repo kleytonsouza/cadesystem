@@ -10,6 +10,7 @@ import 'data/services/cade_database.dart';
 import 'data/services/backup_service.dart';
 import 'data/services/midia_service.dart';
 import 'data/services/permissao_service.dart';
+import 'data/services/reconhecimento_service.dart';
 import 'ui/home/home_view.dart';
 
 /// Mantém as dependências pelo tempo de vida do aplicativo e as libera ao sair.
@@ -44,6 +45,7 @@ class _CadeAppState extends State<CadeApp> {
           ),
         ),
         Provider(create: (_) => PermissaoService()),
+        Provider(create: (_) => ReconhecimentoService()),
         Provider(
           create: (context) => CategoriaRepository(banco: context.read()),
         ),
